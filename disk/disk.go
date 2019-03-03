@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -30,6 +31,16 @@ func (s Store) ReadFile(path string) ([]byte, error) {
 
 // WriteFile creates or overwrites a file on disk at the given path with the given content.
 func (s Store) WriteFile(path string, content []byte) error {
+	parts := strings.Split(path, "/")
+	folders := strings.Join(parts[0:len(parts)-1], "/")
+
+	if folders != "" {
+		if err := os.MkdirAll(s.fullPath(folders), 0777); err != nil {
+			return errors.Wrap(err, "failed to create intermediate directories")
+		}
+	}
+
+	// TODO (erik): Create intermediate directories if necessary.
 	return errors.Wrap(ioutil.WriteFile(s.fullPath(path), content, 0777), "failed to write file")
 }
 
@@ -52,9 +63,16 @@ func (s Store) ListDir(path string) ([]string, error) {
 			return nil, err
 		}
 
-		listing := make([]string, len(files))
+		listing := make([]string, 0, len(files))
 		for _, f := range files {
-			listing = append(listing, f.Name())
+			name := f.Name()
+			if f.IsDir() {
+				name += "/"
+			}
+
+			if name != "" {
+				listing = append(listing, name)
+			}
 		}
 
 		return listing, nil
