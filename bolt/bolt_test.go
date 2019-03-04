@@ -205,3 +205,62 @@ func Test_PutGetRemoveGroup(t *testing.T) {
 		t.Fatal("group UpdatedAt not set properly")
 	}
 }
+
+func Test_PutGetRemovePolicy(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
+	dbName := "test.db"
+	defer os.Remove(dbName) // cleanup database after test
+	db, err := bolt.Open(dbName, 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	store, err := New(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	policy := skribe.Policy{
+		Users:  []string{xid.New().String(), xid.New().String(), xid.New().String()},
+		Groups: []string{xid.New().String(), xid.New().String(), xid.New().String()},
+	}
+
+	// RUN
+	id, err := store.PutPolicy(ctx, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getPolicy, err := store.GetPolicy(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.RemovePolicy(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := store.GetPolicy(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	// ASSERT
+
+	if len(getPolicy.Users) != len(policy.Users) {
+		t.Fatal("policy users aren't the same length")
+	}
+
+	if len(getPolicy.Groups) != len(policy.Groups) {
+		t.Fatal("policy groups aren't the same length")
+	}
+
+	if getPolicy.CreatedAt.IsZero() {
+		t.Fatal("policy CreatedAt not set properly")
+	}
+
+	if getPolicy.UpdatedAt.IsZero() {
+		t.Fatal("policy UpdatedAt not set properly")
+	}
+}
