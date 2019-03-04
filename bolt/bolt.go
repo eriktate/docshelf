@@ -38,18 +38,9 @@ func New(db *bolt.DB) (Store, error) {
 // GetUser fetches an existing skribe User from boltdb.
 func (s Store) GetUser(ctx context.Context, id string) (skribe.User, error) {
 	var user skribe.User
-	var val []byte
 
-	if err := s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(userBucket)
-		val = b.Get([]byte(id))
-		return nil
-	}); err != nil {
-		return user, err
-	}
-
-	if err := json.Unmarshal(val, &user); err != nil {
-		return user, errors.Wrap(err, "failed to unmarshal user from bolt")
+	if err := s.getItem(ctx, userBucket, id, &user); err != nil {
+		return user, errors.Wrap(err, "failed to fetch user from bolt")
 	}
 
 	if user.DeletedAt != nil {
@@ -99,21 +90,8 @@ func (s Store) PutUser(ctx context.Context, user skribe.User) (string, error) {
 
 	user.UpdatedAt = time.Now()
 
-	value, err := json.Marshal(&user)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to marshal user for bolt storage")
-	}
-
-	if err := s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(userBucket)
-
-		if err := b.Put([]byte(user.ID), value); err != nil {
-			return err
-		}
-
-		return nil
-	}); err != nil {
-		return "", err
+	if err := s.putItem(ctx, userBucket, user.ID, user); err != nil {
+		return "", errors.Wrap(err, "failed to put user into bolt")
 	}
 
 	return user.ID, nil
@@ -121,7 +99,7 @@ func (s Store) PutUser(ctx context.Context, user skribe.User) (string, error) {
 
 // RemoveUser marks a user as deleted in boltdb.
 func (s Store) RemoveUser(ctx context.Context, id string) error {
-	if err := s.db.Update(func(tx *bolt.Tx) error {
+	return errors.Wrap(s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(userBucket)
 
 		key := []byte(id)
@@ -144,9 +122,79 @@ func (s Store) RemoveUser(ctx context.Context, id string) error {
 		}
 
 		return nil
+	}), "failed to remove user from bolt")
+}
+
+// GetGroup fetches an existing skribe Group from boltdb.
+func (s Store) GetGroup(ctx context.Context, id string) (skribe.Group, error) {
+	var group skribe.Group
+
+	if err := s.getItem(ctx, groupBucket, id, &group); err != nil {
+		return group, errors.Wrap(err, "failed to fetch group from bolt")
+	}
+
+	return group, nil
+}
+
+// PutGroup creates a new skribe User or updates an existing one in boltdb.
+func (s Store) PutGroup(ctx context.Context, group skribe.Group) (string, error) {
+	if group.ID == "" {
+		group.ID = xid.New().String()
+	}
+
+	if group.CreatedAt.IsZero() {
+		group.CreatedAt = time.Now()
+	}
+
+	group.UpdatedAt = time.Now()
+
+	if err := s.putItem(ctx, groupBucket, group.ID, group); err != nil {
+		return "", errors.Wrap(err, "failed to put group into bolt")
+	}
+
+	return group.ID, nil
+}
+
+// RemoveGroup marks a user as deleted in boltdb.
+func (s Store) RemoveGroup(ctx context.Context, id string) error {
+	return errors.Wrap(s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(userBucket)
+
+		if err := b.Delete([]byte(id)); err != nil {
+			return err
+		}
+
+		return nil
+	}), "failed to remove group from bolt")
+}
+
+func (s Store) getItem(ctx context.Context, bucket []byte, id string, out interface{}) error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket)
+		if err := json.Unmarshal(b.Get([]byte(id)), out); err != nil {
+			return errors.Wrap(err, "failed to unmarshal entity from bolt")
+		}
+		return nil
+	})
+}
+
+func (s Store) putItem(ctx context.Context, bucket []byte, id string, val interface{}) error {
+	if err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket)
+		value, err := json.Marshal(val)
+		if err != nil {
+			return errors.Wrap(err, "failed to marshal entity for bolt storage")
+		}
+
+		if err := b.Put([]byte(id), value); err != nil {
+			return err
+		}
+
+		return nil
 	}); err != nil {
 		return err
 	}
+
 	return nil
 }
 
