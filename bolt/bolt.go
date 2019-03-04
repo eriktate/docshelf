@@ -1,6 +1,7 @@
 package bolt
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"time"
@@ -212,7 +213,7 @@ func (s Store) RemovePolicy(ctx context.Context, id string) error {
 	}), "failed to remove policy from bolt")
 }
 
-// GetDoc fetches a skribe Document form bolt. It will also read and package the Content from an underlying FileStore.
+// GetDoc fetches a skribe Document from bolt. It will also read and package the Content from an underlying FileStore.
 func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
 	var doc skribe.Doc
 
@@ -229,8 +230,29 @@ func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
 	return doc, nil
 }
 
+// ListDocs fetches a slice of skribe Document metadata from bolt that fit the given prefix.
 func (s Store) ListDocs(ctx context.Context, prefix string) ([]skribe.Doc, error) {
-	return nil, nil
+	docs := make([]skribe.Doc, 0)
+	if err := s.db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket(docBucket).Cursor()
+
+		pre := []byte(prefix)
+
+		for k, v := c.Seek(pre); k != nil && bytes.HasPrefix(k, pre); k, v = c.Next() {
+			var doc skribe.Doc
+			if err := json.Unmarshal(v, &doc); err != nil {
+				return errors.Wrap(err, "failed to unmarshal doc from bolt")
+			}
+
+			docs = append(docs, doc)
+		}
+
+		return nil
+	}); err != nil {
+		return nil, errors.Wrap(err, "failed to list prefix from bolt")
+	}
+
+	return docs, nil
 }
 
 // PutDoc creates or updates an existing skribe Doc in bolt. It will also store the Content in an underlying FileStore.
