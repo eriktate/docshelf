@@ -16,6 +16,7 @@ type Store struct {
 
 // New returns a new Store struct based on the given rootPath.
 func New(rootPath string) Store {
+	os.MkdirAll(rootPath, 0777)
 	return Store{rootPath}
 }
 
