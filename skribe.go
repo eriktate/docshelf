@@ -7,54 +7,54 @@ import (
 
 // A User is the identity of anyone using skribe.
 type User struct {
-	ID        string
-	Email     string
-	Name      string
-	Token     string
-	Groups    []string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        string     `json:"id"`
+	Email     string     `json:"email"`
+	Name      string     `json:"name"`
+	Token     string     `json:"token"`
+	Groups    []string   `json:"groups"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
 }
 
 // A Group is collection of Users for the purposes of granting access.
 type Group struct {
-	ID        string
-	Name      string
-	Users     []string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Users     []string  `json:"users"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // A Doc is a full skribe document. This includes metadata as well as content.
 type Doc struct {
-	ID        string
-	FilePath  string
-	IsDir     bool
-	Content   []byte
-	Policy    *Policy
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	UpdatedBy string
+	Path      string    `json:"path"`
+	Title     string    `json:"title"`
+	IsDir     bool      `json:"isDir"`
+	Content   []byte    `json:"content,omitempty"`
+	Policy    *Policy   `json:"policy"`
+	CreatedBy string    `json:"createdBy"`
+	UpdatedBy string    `json:"updatedBy"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // An Policy defines the users and groups that have access to a particular file path.
 type Policy struct {
-	ID        string
-	Users     []string
-	Groups    []string
-	ReadOnly  bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string    `json:"id"`
+	Users     []string  `json:"users"`
+	Groups    []string  `json:"groups"`
+	ReadOnly  bool      `json:"readOnly"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // A DocStore knows how to store and retrieve skribe documents.
 type DocStore interface {
 	GetDoc(ctx context.Context, id string) (Doc, error)
-	GetPath(ctx context.Context, path string) (Doc, error)
 	ListPath(ctx context.Context, path string) ([]Doc, error)
-	PutDoc(ctx context.Context, doc Doc) (string, error)
-	RemoveDoc(ctx context.Context, id string) (string, error)
+	PutDoc(ctx context.Context, doc Doc) error
+	RemoveDoc(ctx context.Context, path string) error
 }
 
 // A UserStore knows how to store and retrieve skribe users.
