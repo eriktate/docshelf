@@ -59,6 +59,7 @@ type DocStore interface {
 // A UserStore knows how to store and retrieve skribe users.
 type UserStore interface {
 	GetUser(ctx context.Context, id string) (User, error)
+	GetEmail(ctx context.Context, email string) (User, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	PutUser(ctx context.Context, user User) (string, error)
 	RemoveUser(ctx context.Context, id string) error
