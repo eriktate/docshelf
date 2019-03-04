@@ -7,6 +7,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/eriktate/skribe"
+	"github.com/rs/xid"
 )
 
 func Test_New(t *testing.T) {
@@ -144,5 +145,63 @@ func Test_ListUsers(t *testing.T) {
 
 	if len(users) != 3 {
 		t.Fatal("returned wrong number of users")
+	}
+}
+
+func Test_PutGetRemoveGroup(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
+	dbName := "test.db"
+	defer os.Remove(dbName) // cleanup database after test
+	db, err := bolt.Open(dbName, 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	store, err := New(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	group := skribe.Group{
+		Name:  "test",
+		Users: []string{xid.New().String(), xid.New().String(), xid.New().String()},
+	}
+
+	// RUN
+	id, err := store.PutGroup(ctx, group)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getGroup, err := store.GetGroup(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.RemoveGroup(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := store.GetGroup(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	// ASSERT
+	if getGroup.Name != group.Name {
+		t.Fatal("group names don't match")
+	}
+
+	if len(getGroup.Users) != len(group.Users) {
+		t.Fatal("group users aren't the same length")
+	}
+
+	if getGroup.CreatedAt.IsZero() {
+		t.Fatal("group CreatedAt not set properly")
+	}
+
+	if getGroup.UpdatedAt.IsZero() {
+		t.Fatal("group UpdatedAt not set properly")
 	}
 }
