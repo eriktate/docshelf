@@ -3,7 +3,6 @@ package bolt
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -19,11 +18,10 @@ var (
 	policyBucket = []byte("policy")
 )
 
-var (
-	ErrUserRemoved = errors.New("user removed in bolt")
-)
+// ErrUserRemoved is a special error case that doesn't necessarily indicate failure.
+var ErrUserRemoved = errors.New("user removed in bolt")
 
-// A Store
+// A Store implements several skribe interfaces using boltdb as the backend.
 type Store struct {
 	db *bolt.DB
 }
@@ -37,14 +35,14 @@ func New(db *bolt.DB) (Store, error) {
 	return Store{db}, nil
 }
 
-// GetUser fetches
+// GetUser fetches an existing skribe User from boltdb.
 func (s Store) GetUser(ctx context.Context, id string) (skribe.User, error) {
 	var user skribe.User
 	var val []byte
 
 	if err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(userBucket)
-		val = b.Get(makeUserKey(id))
+		val = b.Get([]byte(id))
 		return nil
 	}); err != nil {
 		return user, err
@@ -61,10 +59,35 @@ func (s Store) GetUser(ctx context.Context, id string) (skribe.User, error) {
 	return user, nil
 }
 
+// ListUsers returns all skribe Users stored in bolt db.
 func (s Store) ListUsers(ctx context.Context) ([]skribe.User, error) {
-	return nil, nil
+	users := make([]skribe.User, 0)
+
+	if err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(userBucket)
+
+		if err := b.ForEach(func(k, v []byte) error {
+			var user skribe.User
+			if err := json.Unmarshal(v, &user); err != nil {
+				return err
+			}
+
+			users = append(users, user)
+
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
+// PutUser creates a new skribe User or updates an existing one in boltdb.
 func (s Store) PutUser(ctx context.Context, user skribe.User) (string, error) {
 	if user.ID == "" {
 		user.ID = xid.New().String()
@@ -84,7 +107,7 @@ func (s Store) PutUser(ctx context.Context, user skribe.User) (string, error) {
 	if err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(userBucket)
 
-		if err := b.Put(makeUserKey(user.ID), value); err != nil {
+		if err := b.Put([]byte(user.ID), value); err != nil {
 			return err
 		}
 
@@ -96,11 +119,12 @@ func (s Store) PutUser(ctx context.Context, user skribe.User) (string, error) {
 	return user.ID, nil
 }
 
+// RemoveUser marks a user as deleted in boltdb.
 func (s Store) RemoveUser(ctx context.Context, id string) error {
 	if err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(userBucket)
 
-		key := makeUserKey(id)
+		key := []byte(id)
 		val := b.Get(key)
 
 		var user skribe.User
@@ -124,10 +148,6 @@ func (s Store) RemoveUser(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
-}
-
-func makeUserKey(key string) []byte {
-	return []byte(fmt.Sprintf("user/%s", key))
 }
 
 func initBuckets(tx *bolt.Tx) error {
