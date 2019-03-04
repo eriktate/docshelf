@@ -7,6 +7,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/eriktate/skribe"
+	"github.com/eriktate/skribe/disk"
 	"github.com/rs/xid"
 )
 
@@ -21,7 +22,7 @@ func Test_New(t *testing.T) {
 	defer db.Close()
 
 	// RUN
-	_, err = New(db)
+	_, err = New(db, nil)
 
 	// ASSERT
 	if err != nil {
@@ -40,7 +41,7 @@ func Test_PutGetRemoveUser(t *testing.T) {
 	}
 	defer db.Close()
 
-	store, err := New(db)
+	store, err := New(db, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +108,7 @@ func Test_ListUsers(t *testing.T) {
 	}
 	defer db.Close()
 
-	store, err := New(db)
+	store, err := New(db, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +160,7 @@ func Test_PutGetRemoveGroup(t *testing.T) {
 	}
 	defer db.Close()
 
-	store, err := New(db)
+	store, err := New(db, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,7 +218,7 @@ func Test_PutGetRemovePolicy(t *testing.T) {
 	}
 	defer db.Close()
 
-	store, err := New(db)
+	store, err := New(db, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,5 +263,105 @@ func Test_PutGetRemovePolicy(t *testing.T) {
 
 	if getPolicy.UpdatedAt.IsZero() {
 		t.Fatal("policy UpdatedAt not set properly")
+	}
+}
+
+func Test_PutGetRemoveDoc(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
+	dbName := "test.db"
+	defer os.Remove(dbName) // cleanup database after test
+	db, err := bolt.Open(dbName, 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	store, err := New(db, disk.New("documents"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc := skribe.Doc{
+		Path:      "test.md",
+		Title:     "Test Document",
+		Content:   []byte("This is a test document, for testing purposes only"),
+		CreatedBy: xid.New().String(),
+		UpdatedBy: xid.New().String(),
+	}
+
+	// RUN
+	if err := store.PutDoc(ctx, doc); err != nil {
+		t.Fatal(err)
+	}
+
+	getDoc, err := store.GetDoc(ctx, doc.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.RemoveDoc(ctx, doc.Path); err != nil {
+		t.Fatal(err)
+	}
+
+	// ASSERT
+	if getDoc.Title != doc.Title {
+		t.Fatal("doc titles don't match")
+	}
+
+	if string(getDoc.Content) != string(doc.Content) {
+		t.Fatal("doc content doesn't match")
+	}
+}
+
+func Test_ListDocs(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
+	dbName := "test.db"
+	defer os.Remove(dbName) // cleanup database after test
+	db, err := bolt.Open(dbName, 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	store, err := New(db, disk.New("documents"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doc1 := skribe.Doc{
+		Path:      "test1.md",
+		Title:     "Test Document 1",
+		Content:   []byte("This is a test document, for testing purposes only"),
+		CreatedBy: xid.New().String(),
+		UpdatedBy: xid.New().String(),
+	}
+
+	doc2 := skribe.Doc{
+		Path:      "test2.md",
+		Title:     "Test Document 2",
+		Content:   []byte("This is a test document, for testing purposes only"),
+		CreatedBy: xid.New().String(),
+		UpdatedBy: xid.New().String(),
+	}
+
+	// RUN
+	if err := store.PutDoc(ctx, doc1); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.PutDoc(ctx, doc2); err != nil {
+		t.Fatal(err)
+	}
+
+	list, err := store.ListDocs(ctx, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// ASSERT
+	if len(list) != 2 {
+		t.Fatal("listing didn't return enough results")
 	}
 }

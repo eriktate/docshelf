@@ -1,6 +1,7 @@
 package bolt
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"time"
@@ -24,15 +25,16 @@ var ErrUserRemoved = errors.New("user removed in bolt")
 // A Store implements several skribe interfaces using boltdb as the backend.
 type Store struct {
 	db *bolt.DB
+	fs skribe.FileStore
 }
 
 // New returns a new boltdb Store. This Store can fulfill the interfaces for UserStore, GroupStore, DocStore, and PolicyStore.
-func New(db *bolt.DB) (Store, error) {
+func New(db *bolt.DB, fs skribe.FileStore) (Store, error) {
 	if err := db.Update(initBuckets); err != nil {
 		return Store{}, err
 	}
 
-	return Store{db}, nil
+	return Store{db, fs}, nil
 }
 
 // GetUser fetches an existing skribe User from boltdb.
@@ -209,6 +211,84 @@ func (s Store) RemovePolicy(ctx context.Context, id string) error {
 
 		return nil
 	}), "failed to remove policy from bolt")
+}
+
+// GetDoc fetches a skribe Document from bolt. It will also read and package the Content from an underlying FileStore.
+func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
+	var doc skribe.Doc
+
+	if err := s.getItem(ctx, docBucket, path, &doc); err != nil {
+		return doc, errors.Wrap(err, "failed to fetch doc from bolt")
+	}
+
+	content, err := s.fs.ReadFile(path)
+	if err != nil {
+		return doc, errors.Wrap(err, "failed to read file from file store")
+	}
+
+	doc.Content = content
+	return doc, nil
+}
+
+// ListDocs fetches a slice of skribe Document metadata from bolt that fit the given prefix.
+func (s Store) ListDocs(ctx context.Context, prefix string) ([]skribe.Doc, error) {
+	docs := make([]skribe.Doc, 0)
+	if err := s.db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket(docBucket).Cursor()
+
+		pre := []byte(prefix)
+
+		for k, v := c.Seek(pre); k != nil && bytes.HasPrefix(k, pre); k, v = c.Next() {
+			var doc skribe.Doc
+			if err := json.Unmarshal(v, &doc); err != nil {
+				return errors.Wrap(err, "failed to unmarshal doc from bolt")
+			}
+
+			docs = append(docs, doc)
+		}
+
+		return nil
+	}); err != nil {
+		return nil, errors.Wrap(err, "failed to list prefix from bolt")
+	}
+
+	return docs, nil
+}
+
+// PutDoc creates or updates an existing skribe Doc in bolt. It will also store the Content in an underlying FileStore.
+func (s Store) PutDoc(ctx context.Context, doc skribe.Doc) error {
+	if doc.Path == "" {
+		return errors.New("can not create a new doc without a path")
+	}
+
+	if err := s.fs.WriteFile(doc.Path, doc.Content); err != nil {
+		return errors.Wrap(err, "failed to write doc to file store")
+	}
+
+	doc.Content = nil // need to clear content before storing doc
+	if err := s.putItem(ctx, docBucket, doc.Path, doc); err != nil {
+		s.fs.RemoveFile(doc.Path) // need to rollback file storage if doc fails
+		return errors.Wrap(err, "failed to put doc into bolt")
+	}
+
+	return nil
+}
+
+// RemoveDoc removes a skribe Doc from bolt as well as the underlying FileStore.
+func (s Store) RemoveDoc(ctx context.Context, path string) error {
+	if err := s.fs.RemoveFile(path); err != nil {
+		return errors.Wrap(err, "failed to remove doc from file store")
+	}
+
+	return errors.Wrap(s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(docBucket)
+
+		if err := b.Delete([]byte(path)); err != nil {
+			return err
+		}
+
+		return nil
+	}), "failed to remove doc from bolt")
 }
 
 func (s Store) getItem(ctx context.Context, bucket []byte, id string, out interface{}) error {
