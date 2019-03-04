@@ -94,3 +94,55 @@ func Test_PutGetRemoveUser(t *testing.T) {
 		t.Fatal("UpdatedAt not set properly")
 	}
 }
+
+func Test_ListUsers(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
+	dbName := "test.db"
+	defer os.Remove(dbName) // cleanup database after test
+	db, err := bolt.Open(dbName, 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	store, err := New(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	user1 := skribe.User{
+		Email: "test@test.com",
+		Name:  "test",
+		Token: "abc123",
+	}
+
+	user2 := user1
+	user2.Email = "test2@test.com"
+	user3 := user1
+	user3.Email = "test3@test.com"
+
+	if _, err := store.PutUser(ctx, user1); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := store.PutUser(ctx, user2); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := store.PutUser(ctx, user3); err != nil {
+		t.Fatal(err)
+	}
+
+	// RUN
+	users, err := store.ListUsers(ctx)
+
+	// ASSERT
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(users) != 3 {
+		t.Fatal("returned wrong number of users")
+	}
+}
