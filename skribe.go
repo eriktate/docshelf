@@ -51,7 +51,7 @@ type Policy struct {
 
 // A DocStore knows how to store and retrieve skribe documents.
 type DocStore interface {
-	GetDoc(ctx context.Context, id string) (Doc, error)
+	GetDoc(ctx context.Context, path string) (Doc, error)
 	ListPath(ctx context.Context, path string) ([]Doc, error)
 	PutDoc(ctx context.Context, doc Doc) error
 	RemoveDoc(ctx context.Context, path string) error
@@ -66,18 +66,18 @@ type UserStore interface {
 	RemoveUser(ctx context.Context, id string) error
 }
 
-// A PolicyStore knows how to store and retrieve skribe Policies.
-type PolicyStore interface {
-	GetPolicy(ctx context.Context, id string) (Policy, error)
-	PutPolicy(ctx context.Context, policy Policy) (string, error)
-	RemovePolicy(ctx context.Context, id string) (string, error)
-}
-
 // A GroupStore knows how to store and retrieve skribe Groups.
 type GroupStore interface {
 	GetGroup(ctx context.Context, id string) (Group, error)
 	PutGroup(ctx context.Context, group Group) (string, error)
 	RemoveGroup(ctx context.Context, id string) error
+}
+
+// A PolicyStore knows how to store and retrieve skribe Policies.
+type PolicyStore interface {
+	GetPolicy(ctx context.Context, id string) (Policy, error)
+	PutPolicy(ctx context.Context, policy Policy) (string, error)
+	RemovePolicy(ctx context.Context, id string) (string, error)
 }
 
 // An Authenticator knows how to authenticate user credentials.
