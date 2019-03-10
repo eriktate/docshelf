@@ -5,11 +5,21 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/eriktate/skribe/bolt"
+	"github.com/eriktate/skribe/disk"
 	"github.com/eriktate/skribe/http"
 )
 
 func main() {
 	server := http.NewServer(getEnvString("SKRIBE_HOST", "localhost"), getEnvUint("SKRIBE_PORT", 1337))
+
+	fs := disk.New("documents")
+	db, err := bolt.New("skribe.db", fs)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server.UserStore = db
 
 	if err := server.Start(); err != nil {
 		log.Fatal(err)

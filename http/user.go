@@ -15,6 +15,7 @@ type ID struct {
 func HandleUser(userStore skribe.UserStore) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		part := shiftPath(r)
+		log.WithField("part", part).Info("Path")
 
 		if part == "" {
 			switch r.Method {
@@ -83,6 +84,7 @@ func HandleUser(userStore skribe.UserStore) http.Handler {
 				return
 			}
 
+			log.Info("Returning found user")
 			statusOk(w, data)
 			return
 		case http.MethodDelete:
