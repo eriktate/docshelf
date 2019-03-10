@@ -20,6 +20,7 @@ func main() {
 	}
 
 	server.UserStore = db
+	server.DocStore = db
 
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
