@@ -41,7 +41,6 @@ func (s Store) WriteFile(path string, content []byte) error {
 		}
 	}
 
-	// TODO (erik): Create intermediate directories if necessary.
 	return errors.Wrap(ioutil.WriteFile(s.fullPath(path), content, 0777), "failed to write file")
 }
 
