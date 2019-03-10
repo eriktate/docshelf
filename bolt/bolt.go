@@ -29,12 +29,21 @@ type Store struct {
 }
 
 // New returns a new boltdb Store. This Store can fulfill the interfaces for UserStore, GroupStore, DocStore, and PolicyStore.
-func New(db *bolt.DB, fs skribe.FileStore) (Store, error) {
+func New(filename string, fs skribe.FileStore) (Store, error) {
+	db, err := bolt.Open(filename, 0600, nil)
+	if err != nil {
+		return Store{}, err
+	}
+
 	if err := db.Update(initBuckets); err != nil {
 		return Store{}, err
 	}
 
 	return Store{db, fs}, nil
+}
+
+func (s Store) Close() error {
+	return s.db.Close()
 }
 
 // GetUser fetches an existing skribe User from boltdb.
@@ -52,6 +61,12 @@ func (s Store) GetUser(ctx context.Context, id string) (skribe.User, error) {
 	return user, nil
 }
 
+// GetEmail fetches an existing skribe User from boltdb given an email.
+func (s Store) GetEmail(ctx context.Context, id string) (skribe.User, error) {
+	// TODO (erik): Needs to be implemented.
+	return skribe.User{}, errors.New("unimplemented")
+}
+
 // ListUsers returns all skribe Users stored in bolt db.
 func (s Store) ListUsers(ctx context.Context) ([]skribe.User, error) {
 	users := make([]skribe.User, 0)
@@ -63,6 +78,11 @@ func (s Store) ListUsers(ctx context.Context) ([]skribe.User, error) {
 			var user skribe.User
 			if err := json.Unmarshal(v, &user); err != nil {
 				return err
+			}
+
+			// need to omit deleted users
+			if user.DeletedAt != nil {
+				return nil
 			}
 
 			users = append(users, user)
