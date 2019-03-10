@@ -96,9 +96,12 @@ func shiftPath(r *http.Request) string {
 	}
 
 	parts := strings.Split(r.URL.Path, "/")
+	newPath := "/"
 	if len(parts) > 2 {
-		r.URL.Path = "/" + strings.Join(parts[2:len(parts)], "/")
+		newPath += strings.Join(parts[2:len(parts)], "/")
 	}
+
+	r.URL.Path = newPath
 
 	return parts[1]
 }
@@ -109,6 +112,7 @@ func serverError(w http.ResponseWriter, msg string) {
 }
 
 func statusOk(w http.ResponseWriter, data []byte) {
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
@@ -120,6 +124,5 @@ func badRequest(w http.ResponseWriter, msg string) {
 
 func noContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
-	w.Header().Add("Content-Type", "application/json")
 	w.Write(nil)
 }
