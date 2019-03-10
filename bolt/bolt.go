@@ -19,9 +19,6 @@ var (
 	policyBucket = []byte("policy")
 )
 
-// ErrUserRemoved is a special error case that doesn't necessarily indicate failure.
-var ErrUserRemoved = errors.New("user removed in bolt")
-
 // A Store implements several skribe interfaces using boltdb as the backend.
 type Store struct {
 	db *bolt.DB
@@ -55,7 +52,7 @@ func (s Store) GetUser(ctx context.Context, id string) (skribe.User, error) {
 	}
 
 	if user.DeletedAt != nil {
-		return skribe.User{}, ErrUserRemoved
+		return skribe.User{}, skribe.NewErrDoesNotExist("user does not exist in bolt")
 	}
 
 	return user, nil
@@ -104,9 +101,6 @@ func (s Store) ListUsers(ctx context.Context) ([]skribe.User, error) {
 func (s Store) PutUser(ctx context.Context, user skribe.User) (string, error) {
 	if user.ID == "" {
 		user.ID = xid.New().String()
-	}
-
-	if user.CreatedAt.IsZero() {
 		user.CreatedAt = time.Now()
 	}
 
@@ -238,6 +232,10 @@ func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
 	var doc skribe.Doc
 
 	if err := s.getItem(ctx, docBucket, path, &doc); err != nil {
+		if skribe.CheckDoesNotExist(err) {
+			return doc, err
+		}
+
 		return doc, errors.Wrap(err, "failed to fetch doc from bolt")
 	}
 
@@ -250,8 +248,8 @@ func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
 	return doc, nil
 }
 
-// ListDocs fetches a slice of skribe Document metadata from bolt that fit the given prefix.
-func (s Store) ListDocs(ctx context.Context, prefix string) ([]skribe.Doc, error) {
+// ListPath fetches a slice of skribe Document metadata from bolt that fit the given prefix.
+func (s Store) ListPath(ctx context.Context, prefix string) ([]skribe.Doc, error) {
 	docs := make([]skribe.Doc, 0)
 	if err := s.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(docBucket).Cursor()
@@ -280,6 +278,16 @@ func (s Store) PutDoc(ctx context.Context, doc skribe.Doc) error {
 	if doc.Path == "" {
 		return errors.New("can not create a new doc without a path")
 	}
+
+	if _, err := s.GetDoc(ctx, doc.Path); err != nil {
+		if !skribe.CheckDoesNotExist(err) {
+			return errors.Wrap(err, "could not verify existing file")
+		}
+
+		doc.CreatedAt = time.Now()
+	}
+
+	doc.UpdatedAt = time.Now()
 
 	if err := s.fs.WriteFile(doc.Path, doc.Content); err != nil {
 		return errors.Wrap(err, "failed to write doc to file store")
@@ -314,9 +322,15 @@ func (s Store) RemoveDoc(ctx context.Context, path string) error {
 func (s Store) getItem(ctx context.Context, bucket []byte, id string, out interface{}) error {
 	return s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucket)
-		if err := json.Unmarshal(b.Get([]byte(id)), out); err != nil {
+		val := b.Get([]byte(id))
+		if val == nil {
+			return skribe.NewErrDoesNotExist("")
+		}
+
+		if err := json.Unmarshal(val, out); err != nil {
 			return errors.Wrap(err, "failed to unmarshal entity from bolt")
 		}
+
 		return nil
 	})
 }

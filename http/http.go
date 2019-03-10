@@ -81,7 +81,7 @@ func (s Server) handler(w http.ResponseWriter, r *http.Request) {
 		HandleUser(s.UserStore).ServeHTTP(w, r)
 		return
 	case "doc":
-		w.Write([]byte("unimplemented"))
+		HandleDoc(s.DocStore).ServeHTTP(w, r)
 	case "group":
 		w.Write([]byte("unimplemented"))
 	case "policy":
@@ -124,5 +124,15 @@ func badRequest(w http.ResponseWriter, msg string) {
 
 func noContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
+	w.Write(nil)
+}
+
+func notAllowed(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusMethodNotAllowed)
+	w.Write(nil)
+}
+
+func notFound(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
 	w.Write(nil)
 }
