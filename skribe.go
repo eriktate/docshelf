@@ -92,3 +92,8 @@ type FileStore interface {
 	RemoveFile(path string) error
 	ListDir(path string) ([]string, error)
 }
+
+// ContentString returns a Doc's content as a string.
+func (d Doc) ContentString() string {
+	return string(d.Content)
+}

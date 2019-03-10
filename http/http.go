@@ -1,12 +1,16 @@
 package http
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
+	"text/template"
 
 	"github.com/eriktate/skribe"
+	"github.com/russross/blackfriday"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -70,6 +74,20 @@ func (s Server) CheckStores() error {
 
 func (s Server) handler(w http.ResponseWriter, r *http.Request) {
 	part := shiftPath(r)
+
+	switch part {
+	case "api":
+		s.handleAPI(w, r)
+		return
+	case "page":
+		s.handlePage(w, r)
+	default:
+		w.Write([]byte("unimplemented"))
+	}
+}
+
+func (s Server) handleAPI(w http.ResponseWriter, r *http.Request) {
+	part := shiftPath(r)
 	if part == "" {
 		log.Error(errors.New("no resource specified"))
 		badRequest(w, "you need to specify a resource")
@@ -86,7 +104,54 @@ func (s Server) handler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("unimplemented"))
 	case "policy":
 		w.Write([]byte("unimplemented"))
+	default:
+		notFound(w)
 	}
+
+}
+
+func (s Server) handlePage(w http.ResponseWriter, r *http.Request) {
+	doc, err := s.DocStore.GetDoc(r.Context(), r.URL.Path[1:len(r.URL.Path)])
+	if err != nil {
+		log.Error(err)
+		serverError(w, "could not render page")
+		return
+	}
+
+	dom := blackfriday.Run(doc.Content)
+	doc.Content = dom
+
+	f, err := ioutil.ReadFile("./template.html")
+	if err != nil {
+		log.Error(err)
+		serverError(w, "could not render page")
+		return
+	}
+
+	tmpl, err := template.New("doc").Parse(string(f))
+	if err != nil {
+		log.Error(err)
+		serverError(w, "could not render page")
+		return
+	}
+
+	data := make([]byte, 0)
+	output := bytes.NewBuffer(data)
+	if err := tmpl.Execute(output, doc); err != nil {
+		log.Error(err)
+		serverError(w, "could not render page")
+		return
+	}
+
+	w.Write(output.Bytes())
+}
+
+func peekPath(r *http.Request) string {
+	if r.URL.Path == "/" {
+		return ""
+	}
+
+	return strings.Split(r.URL.Path, "/")[1]
 }
 
 func shiftPath(r *http.Request) string {
