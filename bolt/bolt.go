@@ -17,6 +17,7 @@ var (
 	groupBucket  = []byte("group")
 	docBucket    = []byte("doc")
 	policyBucket = []byte("policy")
+	tagBucket    = []byte("tag")
 )
 
 // A Store implements several skribe interfaces using boltdb as the backend.
@@ -273,6 +274,43 @@ func (s Store) ListPath(ctx context.Context, prefix string) ([]skribe.Doc, error
 	return docs, nil
 }
 
+// ListTags fetches a slice of skribe Document metadata from bolt that match all of the given tags.
+func (s Store) ListTags(ctx context.Context, tags ...string) ([]skribe.Doc, error) {
+	var docs []skribe.Doc
+	if err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(tagBucket)
+		var docIDs []string
+		for _, t := range tags {
+			val := b.Get([]byte(t))
+			if val == nil {
+				return skribe.NewErrDoesNotExist(t)
+			}
+
+			var ids []string
+			if err := json.Unmarshal(val, &ids); err != nil {
+				return err
+			}
+
+			if docIDs == nil {
+				docIDs = ids
+			} else {
+				docIDs = isect(docIDs, ids)
+			}
+
+		}
+
+		b = tx.Bucket(docBucket)
+		for _, id := range docIDs {
+			val := b.Get([]byte(id))
+			// TODO: Unmarshal into documents and return results.
+		}
+	}); err != nil {
+		return nil, err
+	}
+
+	return docs, nil
+}
+
 // PutDoc creates or updates an existing skribe Doc in bolt. It will also store the Content in an underlying FileStore.
 func (s Store) PutDoc(ctx context.Context, doc skribe.Doc) error {
 	if doc.Path == "" {
@@ -372,5 +410,43 @@ func initBuckets(tx *bolt.Tx) error {
 		return err
 	}
 
+	if _, err := tx.CreateBucketIfNotExists(tagBucket); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func intersect(ids ...[]string) []string {
+	var workingSet []string
+	if ids == nil || len(ids) == 0 {
+		workingSet = ids[0]
+	}
+
+	for i := 1; i < len(ids); i++ {
+		workingSet = isect(workingSet, ids[i])
+	}
+
+	return workingSet
+}
+
+func isect(left, right []string) []string {
+	intersection := make([]string, 0)
+	for _, el := range left {
+		if contains(right, el) {
+			intersection = append(intersection, el)
+		}
+	}
+
+	return intersection
+}
+
+func contains(slice []string, el string) bool {
+	for _, s := range slice {
+		if s == el {
+			return true
+		}
+	}
+
+	return false
 }

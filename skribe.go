@@ -33,6 +33,7 @@ type Doc struct {
 	IsDir     bool      `json:"isDir"`
 	Content   []byte    `json:"content,omitempty"`
 	Policy    *Policy   `json:"policy"`
+	Tags      []string  `json:"tags"`
 	CreatedBy string    `json:"createdBy"`
 	UpdatedBy string    `json:"updatedBy"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -53,7 +54,9 @@ type Policy struct {
 type DocStore interface {
 	GetDoc(ctx context.Context, path string) (Doc, error)
 	ListPath(ctx context.Context, path string) ([]Doc, error)
+	ListTags(ctx context.Context, tags ...string) ([]Doc, error)
 	PutDoc(ctx context.Context, doc Doc) error
+	TagDoc(ctx context.Context, path string, tags ...string) error
 	RemoveDoc(ctx context.Context, path string) error
 }
 
