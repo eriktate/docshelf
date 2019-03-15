@@ -34,7 +34,7 @@ func HandleUser(userStore skribe.UserStore) http.Handler {
 					return
 				}
 
-				statusOk(w, data)
+				okJson(w, data)
 				return
 
 			case http.MethodPost:
@@ -59,7 +59,7 @@ func HandleUser(userStore skribe.UserStore) http.Handler {
 					return
 				}
 
-				statusOk(w, data)
+				okJson(w, data)
 				return
 
 			default:
@@ -84,8 +84,7 @@ func HandleUser(userStore skribe.UserStore) http.Handler {
 				return
 			}
 
-			log.Info("Returning found user")
-			statusOk(w, data)
+			okJson(w, data)
 			return
 		case http.MethodDelete:
 			if err := userStore.RemoveUser(r.Context(), part); err != nil {

@@ -36,6 +36,7 @@ func NewServer(addr string, port uint) Server {
 
 // Start fires up an HTTP server and listens for incoming requests.
 func (s Server) Start() error {
+	log.Info("Starting doc server...")
 	// if err := s.CheckStores(); err != nil {
 	// 	return err
 	// }
@@ -79,8 +80,8 @@ func (s Server) handler(w http.ResponseWriter, r *http.Request) {
 	case "api":
 		s.handleAPI(w, r)
 		return
-	case "page":
-		s.handlePage(w, r)
+	case "doc":
+		s.handleDoc(w, r)
 	default:
 		w.Write([]byte("unimplemented"))
 	}
@@ -110,7 +111,7 @@ func (s Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s Server) handlePage(w http.ResponseWriter, r *http.Request) {
+func (s Server) handleDoc(w http.ResponseWriter, r *http.Request) {
 	doc, err := s.DocStore.GetDoc(r.Context(), r.URL.Path[1:len(r.URL.Path)])
 	if err != nil {
 		log.Error(err)
@@ -121,6 +122,8 @@ func (s Server) handlePage(w http.ResponseWriter, r *http.Request) {
 	dom := blackfriday.Run(doc.Content)
 	doc.Content = dom
 
+	// TODO (erik): Need to embed this template in the binary rather than reading off of
+	// the file system.
 	f, err := ioutil.ReadFile("./template.html")
 	if err != nil {
 		log.Error(err)
@@ -143,7 +146,7 @@ func (s Server) handlePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(output.Bytes())
+	okHtml(w, output.Bytes())
 }
 
 func peekPath(r *http.Request) string {
@@ -169,35 +172,4 @@ func shiftPath(r *http.Request) string {
 	r.URL.Path = newPath
 
 	return parts[1]
-}
-
-func serverError(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(msg))
-}
-
-func statusOk(w http.ResponseWriter, data []byte) {
-	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
-}
-
-func badRequest(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte(msg))
-}
-
-func noContent(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNoContent)
-	w.Write(nil)
-}
-
-func notAllowed(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
-	w.Write(nil)
-}
-
-func notFound(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
-	w.Write(nil)
 }

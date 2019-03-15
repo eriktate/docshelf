@@ -53,7 +53,7 @@ func HandleDoc(docStore skribe.DocStore) http.Handler {
 					return
 				}
 
-				statusOk(w, data)
+				okJson(w, data)
 				return
 			default:
 				notAllowed(w)
@@ -82,7 +82,7 @@ func HandleDoc(docStore skribe.DocStore) http.Handler {
 					return
 				}
 
-				statusOk(w, data)
+				okJson(w, data)
 				return
 			case http.MethodDelete:
 				if err := docStore.RemoveDoc(r.Context(), part); err != nil {
