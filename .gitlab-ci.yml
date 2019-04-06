@@ -24,5 +24,11 @@ test:
 coverage:
   stage: test
   script:
-    - go test -covermode=count -coverprofile=.coverage.out
-    - go tool cover -html=coverage.out -o coverage.html
+    - go test -covermode=count -coverprofile=.coverage.out ./bolt
+    - go tool cover -html=.coverage.out -o coverage.html
+    - mkdir -p public/
+    - mv coverage.html public/coverage.html
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
