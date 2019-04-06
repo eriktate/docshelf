@@ -13,7 +13,11 @@ import (
 func main() {
 	server := http.NewServer(getEnvString("SKRIBE_HOST", "localhost"), getEnvUint("SKRIBE_PORT", 1337))
 
-	fs := disk.New("documents")
+	fs, err := disk.New("documents")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := bolt.New("skribe.db", fs)
 	if err != nil {
 		log.Fatal(err)

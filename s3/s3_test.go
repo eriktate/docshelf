@@ -2,10 +2,13 @@ package s3
 
 import "testing"
 
+const (
+	bucket = "skribe-dev"
+	root   = "documents"
+)
+
 func Test_FileLifecycle(t *testing.T) {
 	// SETUP
-	bucket := "skribe-dev"
-	root := "documents"
 	testFile := []byte("This is some test content to store!")
 	testPath := "test.md"
 
@@ -36,8 +39,6 @@ func Test_FileLifecycle(t *testing.T) {
 
 func Test_WriteTree(t *testing.T) {
 	// SETUP
-	bucket := "skribe-dev"
-	root := "documents"
 	testFile := []byte("This is some test content to store!")
 	testPath := "test/test.md"
 
@@ -68,8 +69,6 @@ func Test_WriteTree(t *testing.T) {
 
 func Test_ListDir(t *testing.T) {
 	// SETUP
-	bucket := "skribe-dev"
-	root := "documents"
 	testFile := []byte("This is some test content to store!")
 	testPath1 := "test/test1.md"
 	testPath2 := "test/test2.md"
