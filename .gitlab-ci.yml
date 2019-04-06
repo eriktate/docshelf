@@ -39,7 +39,7 @@ pages:
     - coverage
   script:
     - mkdir -p public/
-    - mv coverage.html public/coverage.html
+    - mv coverage.html public/index.html
   artifacts:
     paths:
       - public
