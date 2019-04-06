@@ -1,0 +1,27 @@
+image: golang:1.12.2
+
+stages:
+  - build
+  - lint
+  - test
+
+build:
+  stage: build
+  script:
+    - go build cmd/server/main.go
+
+lint:
+  stage: lint
+  script:
+    - golangci-lint ./...
+
+test:
+  stage: test
+  script:
+    - go test -v ./...
+
+coverage:
+  stage: test
+  script:
+    - go test -covermode=count -coverprofile=.coverage.out
+    - go tool cover -html=coverage.out -o coverage.html
