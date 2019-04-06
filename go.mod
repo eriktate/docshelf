@@ -1,7 +1,7 @@
 module github.com/eriktate/skribe
 
 require (
-	github.com/aws/aws-sdk-go v1.17.14
+	github.com/aws/aws-sdk-go-v2 v0.7.0
 	github.com/boltdb/bolt v1.3.1
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v1.2.1
