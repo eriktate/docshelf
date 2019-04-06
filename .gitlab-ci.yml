@@ -20,7 +20,8 @@ lint:
 test:
   stage: test
   script:
-    - go test -v ./...
+    # - go test -v ./...
+    go test -v ./bolt
 
 coverage:
   stage: test
