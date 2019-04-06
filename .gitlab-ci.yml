@@ -13,7 +13,8 @@ build:
 lint:
   stage: lint
   script:
-    - golangci-lint ./...
+    - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s vX.Y.Z
+    - ./bin/golangci-lint ./...
 
 test:
   stage: test
