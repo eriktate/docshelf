@@ -37,6 +37,7 @@ pages:
   dependencies:
     - coverage
   script:
+    - mkdir -p public/
     - mv coverage.html public/coverage.html
   artifacts:
     paths:
