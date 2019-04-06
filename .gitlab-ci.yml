@@ -20,13 +20,7 @@ lint:
 test:
   stage: test
   script:
-    # - go test -v ./...
-    go test -v ./bolt
-
-coverage:
-  stage: test
-  script:
-    - go test -cover -covermode=count -coverprofile=.coverage.out ./bolt
+    - go test -v -cover -covermode=count -coverprofile=.coverage.out ./bolt
     - go tool cover -html=.coverage.out -o coverage.html
   coverage: '/coverage: \d+\.\d+/'
   artifacts:
@@ -36,7 +30,7 @@ coverage:
 pages:
   stage: report
   dependencies:
-    - coverage
+    - test
   script:
     - mkdir -p public/
     - mv coverage.html public/index.html
@@ -44,3 +38,5 @@ pages:
     paths:
       - public
     expire_in: 30 days
+  only:
+    - master
