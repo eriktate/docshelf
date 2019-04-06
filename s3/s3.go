@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/s3iface"
 )
 
 // A Store that can write and read documents from S3.
@@ -21,20 +22,21 @@ type Store struct {
 // New returns a new S3 Store and checks that the given bucket exists. It will use the root as a prefix for
 // all objects created.
 func New(bucket, root string) (Store, error) {
-	sess, err := session.NewSession()
+	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		return Store{}, err
 	}
 
-	client := s3.New(sess, aws.NewConfig().WithRegion("us-east-1"))
+	cfg.Region = endpoints.UsEast1RegionID
+	svc := s3.New(cfg)
 
 	// need to make sure the bucket exists
-	if _, err := client.HeadBucket(&s3.HeadBucketInput{Bucket: aws.String(bucket)}); err != nil {
+	if _, err := svc.HeadBucketRequest(&s3.HeadBucketInput{Bucket: aws.String(bucket)}).Send(); err != nil {
 		return Store{}, err
 	}
 
 	return Store{
-		client: client,
+		client: svc,
 		root:   root,
 		bucket: bucket,
 	}, nil
@@ -47,7 +49,7 @@ func (s Store) ReadFile(path string) ([]byte, error) {
 		Key:    aws.String(fmt.Sprintf("%s/%s", s.root, path)),
 	}
 
-	res, err := s.client.GetObject(&input)
+	res, err := s.client.GetObjectRequest(&input).Send()
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +65,7 @@ func (s Store) WriteFile(path string, content []byte) error {
 		Body:   bytes.NewReader(content),
 	}
 
-	if _, err := s.client.PutObject(&input); err != nil {
+	if _, err := s.client.PutObjectRequest(&input).Send(); err != nil {
 		return err
 	}
 
@@ -77,7 +79,7 @@ func (s Store) RemoveFile(path string) error {
 		Key:    aws.String(fmt.Sprintf("%s/%s", s.root, path)),
 	}
 
-	if _, err := s.client.DeleteObject(&input); err != nil {
+	if _, err := s.client.DeleteObjectRequest(&input).Send(); err != nil {
 		return err
 	}
 
@@ -91,7 +93,7 @@ func (s Store) ListDir(path string) ([]string, error) {
 		Prefix: aws.String(fmt.Sprintf("%s/%s", s.root, path)),
 	}
 
-	res, err := s.client.ListObjects(&input)
+	res, err := s.client.ListObjectsRequest(&input).Send()
 	if err != nil {
 		return nil, err
 	}
