@@ -4,6 +4,7 @@ stages:
   - build
   - lint
   - test
+  - report
 
 build:
   stage: build
@@ -26,7 +27,15 @@ coverage:
   script:
     - go test -covermode=count -coverprofile=.coverage.out ./bolt
     - go tool cover -html=.coverage.out -o coverage.html
-    - mkdir -p public/
+  artifacts:
+    paths:
+      - coverage.html
+
+pages:
+  stage: report
+  dependencies:
+    - coverage
+  script:
     - mv coverage.html public/coverage.html
   artifacts:
     paths:
