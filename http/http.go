@@ -83,9 +83,9 @@ func (s Server) handler(w http.ResponseWriter, r *http.Request) {
 	case "doc":
 		HandleDoc(s.DocStore).ServeHTTP(w, r)
 	case "group":
-		w.Write([]byte("unimplemented"))
+		statusOk(w, []byte("unimplemented"))
 	case "policy":
-		w.Write([]byte("unimplemented"))
+		statusOk(w, []byte("unimplemented"))
 	}
 }
 
@@ -98,7 +98,7 @@ func shiftPath(r *http.Request) string {
 	parts := strings.Split(r.URL.Path, "/")
 	newPath := "/"
 	if len(parts) > 2 {
-		newPath += strings.Join(parts[2:len(parts)], "/")
+		newPath += strings.Join(parts[2:], "/")
 	}
 
 	r.URL.Path = newPath
@@ -108,31 +108,43 @@ func shiftPath(r *http.Request) string {
 
 func serverError(w http.ResponseWriter, msg string) {
 	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(msg))
+	if _, err := w.Write([]byte(msg)); err != nil {
+		log.WithError(err).Error()
+	}
 }
 
 func statusOk(w http.ResponseWriter, data []byte) {
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	if _, err := w.Write(data); err != nil {
+		log.WithError(err).Error()
+	}
 }
 
 func badRequest(w http.ResponseWriter, msg string) {
 	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte(msg))
+	if _, err := w.Write([]byte(msg)); err != nil {
+		log.WithError(err).Error()
+	}
 }
 
 func noContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
-	w.Write(nil)
+	if _, err := w.Write(nil); err != nil {
+		log.WithError(err).Error()
+	}
 }
 
 func notAllowed(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
-	w.Write(nil)
+	if _, err := w.Write(nil); err != nil {
+		log.WithError(err).Error()
+	}
 }
 
 func notFound(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	w.Write(nil)
+	if _, err := w.Write(nil); err != nil {
+		log.WithError(err).Error()
+	}
 }
