@@ -15,9 +15,8 @@ type Store struct {
 }
 
 // New returns a new Store struct based on the given rootPath.
-func New(rootPath string) Store {
-	os.MkdirAll(rootPath, 0777)
-	return Store{rootPath}
+func New(rootPath string) (Store, error) {
+	return Store{rootPath}, os.MkdirAll(rootPath, 0777)
 }
 
 // ReadFile reads the content from an existing file on disk.

@@ -25,7 +25,8 @@ type Store struct {
 	fs skribe.FileStore
 }
 
-// New returns a new boltdb Store. This Store can fulfill the interfaces for UserStore, GroupStore, DocStore, and PolicyStore.
+// New returns a new boltdb Store. This Store can fulfill the interfaces for UserStore, GroupStore, DocStore,
+// and PolicyStore.
 func New(filename string, fs skribe.FileStore) (Store, error) {
 	db, err := bolt.Open(filename, 0600, nil)
 	if err != nil {
@@ -39,6 +40,8 @@ func New(filename string, fs skribe.FileStore) (Store, error) {
 	return Store{db, fs}, nil
 }
 
+// Close closes the bolt DB file. It currently omits the error for convenience, but that should maybe change
+// in the future.
 func (s Store) Close() error {
 	return s.db.Close()
 }
@@ -48,11 +51,11 @@ func (s Store) GetUser(ctx context.Context, id string) (skribe.User, error) {
 	var user skribe.User
 
 	if err := s.getItem(ctx, userBucket, id, &user); err != nil {
-		return user, errors.Wrap(err, "failed to fetch user from bolt")
+		return user, err
 	}
 
 	if user.DeletedAt != nil {
-		return skribe.User{}, skribe.NewErrDoesNotExist("user does not exist in bolt")
+		return skribe.User{}, skribe.NewErrRemoved("user no longer exists in bolt")
 	}
 
 	return user, nil
@@ -295,7 +298,9 @@ func (s Store) PutDoc(ctx context.Context, doc skribe.Doc) error {
 
 	doc.Content = nil // need to clear content before storing doc
 	if err := s.putItem(ctx, docBucket, doc.Path, doc); err != nil {
-		s.fs.RemoveFile(doc.Path) // need to rollback file storage if doc fails
+		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc fails
+			return errors.Wrap(err, "failed to put cleanup file after bolt failure")
+		}
 		return errors.Wrap(err, "failed to put doc into bolt")
 	}
 
