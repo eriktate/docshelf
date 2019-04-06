@@ -26,7 +26,7 @@ test:
 coverage:
   stage: test
   script:
-    - go test -covermode=count -coverprofile=.coverage.out ./bolt
+    - go test -cover -covermode=count -coverprofile=.coverage.out ./bolt
     - go tool cover -html=.coverage.out -o coverage.html
   artifacts:
     paths:
