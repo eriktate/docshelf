@@ -20,7 +20,7 @@ lint:
 test:
   stage: test
   script:
-    - go test -v -cover -covermode=count -coverprofile=.coverage.out ./bolt
+    - go test -v -cover -covermode=count -coverprofile=.coverage.out ./...
     - go tool cover -html=.coverage.out -o coverage.html
   coverage: '/coverage: \d+\.\d+/'
   artifacts:
