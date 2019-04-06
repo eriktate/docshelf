@@ -28,6 +28,7 @@ coverage:
   script:
     - go test -cover -covermode=count -coverprofile=.coverage.out ./bolt
     - go tool cover -html=.coverage.out -o coverage.html
+  coverage: '/coverage: \d+\.\d+/'
   artifacts:
     paths:
       - coverage.html
