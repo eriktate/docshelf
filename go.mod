@@ -1,7 +1,6 @@
 module github.com/eriktate/docshelf
 
 require (
-	github.com/aws/aws-sdk-go v1.19.11
 	github.com/aws/aws-sdk-go-v2 v0.7.0
 	github.com/boltdb/bolt v1.3.1
 	github.com/go-chi/chi v4.0.2+incompatible

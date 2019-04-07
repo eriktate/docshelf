@@ -313,3 +313,54 @@ func Test_TagLifecycle(t *testing.T) {
 		t.Fatal("listing returned wrong results for tag 'two'")
 	}
 }
+
+func Test_PutGetRemoveGroup(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
+
+	store, err := New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	group := docshelf.Group{
+		Name:  "test",
+		Users: []string{xid.New().String(), xid.New().String(), xid.New().String()},
+	}
+
+	// RUN
+	id, err := store.PutGroup(ctx, group)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getGroup, err := store.GetGroup(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.RemoveGroup(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := store.GetGroup(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	// ASSERT
+	if getGroup.Name != group.Name {
+		t.Fatal("group names don't match")
+	}
+
+	if len(getGroup.Users) != len(group.Users) {
+		t.Fatal("group users aren't the same length")
+	}
+
+	if getGroup.CreatedAt.IsZero() {
+		t.Fatal("group CreatedAt not set properly")
+	}
+
+	if getGroup.UpdatedAt.IsZero() {
+		t.Fatal("group UpdatedAt not set properly")
+	}
+}
