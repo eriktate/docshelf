@@ -57,7 +57,7 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 func (h DocHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	path := chi.URLParam(r, "path")
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
-	docs, err := h.docStore.ListPath(r.Context(), path, tags...)
+	docs, err := h.docStore.ListDocs(r.Context(), path, tags...)
 	if err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while listing documents")

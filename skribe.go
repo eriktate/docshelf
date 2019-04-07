@@ -53,7 +53,7 @@ type Policy struct {
 // A DocStore knows how to store and retrieve skribe documents.
 type DocStore interface {
 	GetDoc(ctx context.Context, path string) (Doc, error)
-	ListPath(ctx context.Context, path string, tags ...string) ([]Doc, error)
+	ListDocs(ctx context.Context, path string, tags ...string) ([]Doc, error)
 	PutDoc(ctx context.Context, doc Doc) error
 	TagDoc(ctx context.Context, path string, tags ...string) error
 	RemoveDoc(ctx context.Context, path string) error
