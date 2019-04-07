@@ -1,4 +1,4 @@
-module github.com/eriktate/skribe
+module github.com/eriktate/docshelf
 
 require (
 	github.com/aws/aws-sdk-go-v2 v0.7.0
