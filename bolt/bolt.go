@@ -254,7 +254,7 @@ func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
 }
 
 // ListPath fetches a slice of skribe Document metadata from bolt that fit the given prefix.
-func (s Store) ListPath(ctx context.Context, prefix string) ([]skribe.Doc, error) {
+func (s Store) ListPath(ctx context.Context, prefix string, tags ...string) ([]skribe.Doc, error) {
 	docs := make([]skribe.Doc, 0)
 	if err := s.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket(docBucket).Cursor()

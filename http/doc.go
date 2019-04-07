@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"text/template"
 
 	"github.com/eriktate/skribe"
@@ -55,7 +56,8 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 // GetList handles requests for listing Docs by path prefix.
 func (h DocHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	path := chi.URLParam(r, "path")
-	docs, err := h.docStore.ListPath(r.Context(), path)
+	tags := strings.Split(r.URL.Query().Get("tags"), ",")
+	docs, err := h.docStore.ListPath(r.Context(), path, tags...)
 	if err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while listing documents")

@@ -18,9 +18,8 @@ type Server struct {
 	PolicyStore skribe.PolicyStore
 	Auth        skribe.Authenticator
 
-	addr   string
-	port   uint
-	router chi.Router
+	addr string
+	port uint
 }
 
 // NewServer returns a new Server struct.
@@ -38,11 +37,7 @@ func (s Server) Start() error {
 	// 	return err
 	// }
 
-	// init API routes. Need to do this here instead of NewServer to make sure all handlers
-	// are set properly.
-	s.buildRoutes()
-
-	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.addr, s.port), s.router); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.addr, s.port), s.buildRoutes()); err != nil {
 		return err
 	}
 
@@ -66,26 +61,27 @@ func (s Server) CheckHandlers() error {
 	return nil
 }
 
-func (s Server) buildRoutes() {
+func (s Server) buildRoutes() chi.Router {
 	mux := chi.NewRouter()
 	mux.Route("/api", func(r chi.Router) {
 		r.Route("/user", func(r chi.Router) {
-			r.Get("", s.UserHandler.GetUsers)
-			r.Post("", s.UserHandler.PostUser)
+			r.Get("/", s.UserHandler.GetUsers)
+			r.Post("/", s.UserHandler.PostUser)
 			r.Get("/{id}", s.UserHandler.GetUser)
 			r.Delete("/{id}", s.UserHandler.DeleteUser)
 		})
 
-		mux.Route("/doc", func(r chi.Router) {
-			r.Post("", s.DocHandler.PostDoc)
+		r.Route("/doc", func(r chi.Router) {
+			r.Post("/", s.DocHandler.PostDoc)
 			r.Get("/list", s.DocHandler.GetList)
-			r.Post("/tag", s.DocHandler.PostTag)
 			r.Get("/{path}", s.DocHandler.GetDoc)
 			r.Delete("/{path}", s.DocHandler.DeleteDoc)
 		})
+
+		r.Post("/tag", s.DocHandler.PostTag)
 	})
 
 	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
 
-	s.router = mux
+	return mux
 }
