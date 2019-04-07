@@ -91,7 +91,7 @@ func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) (
 	for _, t := range tags {
 		var ids []string
 		if err := s.getItem(ctx, tx, tagBucket, t, &ids); err != nil {
-			return nil, err
+			continue
 		}
 
 		if docIDs == nil {
@@ -104,8 +104,8 @@ func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) (
 	var docs []skribe.Doc
 	for _, id := range docIDs {
 		var doc skribe.Doc
-		if err := s.getItem(ctx, tx, tagBucket, id, &doc); err != nil {
-			return nil, err
+		if err := s.getItem(ctx, tx, docBucket, id, &doc); err != nil {
+			continue
 		}
 
 		docs = append(docs, doc)

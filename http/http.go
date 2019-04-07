@@ -74,6 +74,7 @@ func (s Server) buildRoutes() chi.Router {
 		r.Route("/doc", func(r chi.Router) {
 			r.Post("/", s.DocHandler.PostDoc)
 			r.Get("/list", s.DocHandler.GetList)
+			r.Get("/list/{prefix}", s.DocHandler.GetList)
 			r.Get("/{path}", s.DocHandler.GetDoc)
 			r.Delete("/{path}", s.DocHandler.DeleteDoc)
 		})

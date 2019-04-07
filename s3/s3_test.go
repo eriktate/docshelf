@@ -1,13 +1,24 @@
 package s3
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 const (
 	bucket = "skribe-dev"
 	root   = "documents"
 )
 
+func checkIntegrationTest() bool {
+	return os.Getenv("DS_INTEGRATION_TEST") == "1"
+}
+
 func Test_FileLifecycle(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	testFile := []byte("This is some test content to store!")
 	testPath := "test.md"
@@ -38,6 +49,10 @@ func Test_FileLifecycle(t *testing.T) {
 }
 
 func Test_WriteTree(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	testFile := []byte("This is some test content to store!")
 	testPath := "test/test.md"
@@ -68,6 +83,10 @@ func Test_WriteTree(t *testing.T) {
 }
 
 func Test_ListDir(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	testFile := []byte("This is some test content to store!")
 	testPath1 := "test/test1.md"
