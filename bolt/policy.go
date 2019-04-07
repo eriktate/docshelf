@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 )
 
-// GetPolicy fetches an existing skribe Policy from boltdb.
-func (s Store) GetPolicy(ctx context.Context, id string) (skribe.Policy, error) {
-	var policy skribe.Policy
+// GetPolicy fetches an existing docshelf Policy from boltdb.
+func (s Store) GetPolicy(ctx context.Context, id string) (docshelf.Policy, error) {
+	var policy docshelf.Policy
 
 	if err := s.fetchItem(ctx, policyBucket, id, &policy); err != nil {
 		return policy, errors.Wrap(err, "failed to fetch policy from bolt")
@@ -21,8 +21,8 @@ func (s Store) GetPolicy(ctx context.Context, id string) (skribe.Policy, error) 
 	return policy, nil
 }
 
-// PutPolicy creates a new skribe User or updates an existing one in boltdb.
-func (s Store) PutPolicy(ctx context.Context, policy skribe.Policy) (string, error) {
+// PutPolicy creates a new docshelf User or updates an existing one in boltdb.
+func (s Store) PutPolicy(ctx context.Context, policy docshelf.Policy) (string, error) {
 	if policy.ID == "" {
 		policy.ID = xid.New().String()
 	}

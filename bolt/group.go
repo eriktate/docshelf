@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 )
 
-// GetGroup fetches an existing skribe Group from boltdb.
-func (s Store) GetGroup(ctx context.Context, id string) (skribe.Group, error) {
-	var group skribe.Group
+// GetGroup fetches an existing docshelf Group from boltdb.
+func (s Store) GetGroup(ctx context.Context, id string) (docshelf.Group, error) {
+	var group docshelf.Group
 
 	if err := s.fetchItem(ctx, groupBucket, id, &group); err != nil {
 		return group, errors.Wrap(err, "failed to fetch group from bolt")
@@ -21,8 +21,8 @@ func (s Store) GetGroup(ctx context.Context, id string) (skribe.Group, error) {
 	return group, nil
 }
 
-// PutGroup creates a new skribe User or updates an existing one in boltdb.
-func (s Store) PutGroup(ctx context.Context, group skribe.Group) (string, error) {
+// PutGroup creates a new docshelf User or updates an existing one in boltdb.
+func (s Store) PutGroup(ctx context.Context, group docshelf.Group) (string, error) {
 	if group.ID == "" {
 		group.ID = xid.New().String()
 	}

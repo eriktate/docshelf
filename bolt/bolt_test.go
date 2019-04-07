@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/eriktate/skribe"
-	"github.com/eriktate/skribe/mock"
+	"github.com/eriktate/docshelf"
+	"github.com/eriktate/docshelf/mock"
 	"github.com/rs/xid"
 )
 
@@ -40,7 +40,7 @@ func Test_PutGetRemoveUser(t *testing.T) {
 	}
 	defer store.Close()
 
-	user := skribe.User{
+	user := docshelf.User{
 		Email: "test@test.com",
 		Name:  "test",
 		Token: "abc123",
@@ -63,7 +63,7 @@ func Test_PutGetRemoveUser(t *testing.T) {
 
 	_, err = store.GetUser(ctx, id)
 	if err != nil {
-		if _, ok := err.(skribe.ErrRemoved); !ok {
+		if _, ok := err.(docshelf.ErrRemoved); !ok {
 			t.Fatal(err)
 		}
 	}
@@ -101,7 +101,7 @@ func Test_ListUsers(t *testing.T) {
 	}
 	defer store.Close()
 
-	user1 := skribe.User{
+	user1 := docshelf.User{
 		Email: "test@test.com",
 		Name:  "test",
 		Token: "abc123",
@@ -148,7 +148,7 @@ func Test_PutGetRemoveGroup(t *testing.T) {
 	}
 	defer store.Close()
 
-	group := skribe.Group{
+	group := docshelf.Group{
 		Name:  "test",
 		Users: []string{xid.New().String(), xid.New().String(), xid.New().String()},
 	}
@@ -201,7 +201,7 @@ func Test_PutGetRemovePolicy(t *testing.T) {
 	}
 	defer store.Close()
 
-	policy := skribe.Policy{
+	policy := docshelf.Policy{
 		Users:  []string{xid.New().String(), xid.New().String(), xid.New().String()},
 		Groups: []string{xid.New().String(), xid.New().String(), xid.New().String()},
 	}
@@ -255,7 +255,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	}
 	defer store.Close()
 
-	doc := skribe.Doc{
+	doc := docshelf.Doc{
 		Path:      "test.md",
 		Title:     "Test Document",
 		Content:   []byte("This is a test document, for testing purposes only"),
@@ -298,7 +298,7 @@ func Test_ListDocs(t *testing.T) {
 	defer store.Close()
 	defer os.Remove(dbName) // cleanup database after test
 
-	doc1 := skribe.Doc{
+	doc1 := docshelf.Doc{
 		Path:      "test1.md",
 		Title:     "Test Document 1",
 		Content:   []byte("This is a test document, for testing purposes only"),
@@ -306,7 +306,7 @@ func Test_ListDocs(t *testing.T) {
 		UpdatedBy: xid.New().String(),
 	}
 
-	doc2 := skribe.Doc{
+	doc2 := docshelf.Doc{
 		Path:      "test2.md",
 		Title:     "Test Document 2",
 		Content:   []byte("This is a test document, for testing purposes only"),
@@ -345,7 +345,7 @@ func Test_TagLifecycle(t *testing.T) {
 	defer store.Close()
 	defer os.Remove(dbName) // cleanup database after test
 
-	doc1 := skribe.Doc{
+	doc1 := docshelf.Doc{
 		Path:      "test1.md",
 		Title:     "Test Document 1",
 		Content:   []byte("This is a test document, for testing purposes only"),
@@ -353,7 +353,7 @@ func Test_TagLifecycle(t *testing.T) {
 		UpdatedBy: xid.New().String(),
 	}
 
-	doc2 := skribe.Doc{
+	doc2 := docshelf.Doc{
 		Path:      "test2.md",
 		Title:     "Test Document 2",
 		Content:   []byte("This is a test document, for testing purposes only"),

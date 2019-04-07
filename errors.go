@@ -1,4 +1,4 @@
-package skribe
+package docshelf
 
 // ErrDoesNotExist is a special error type for signaling that a requested entity
 // doesn't exist.

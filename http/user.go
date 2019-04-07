@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 )
@@ -16,12 +16,12 @@ type ID struct {
 
 // A UserHandler has methods that can handle HTTP requests for Users.
 type UserHandler struct {
-	userStore skribe.UserStore
+	userStore docshelf.UserStore
 	log       *logrus.Logger
 }
 
 // NewUserHandler returns a UserHandler struct using the given UserStore and Logger instance.
-func NewUserHandler(userStore skribe.UserStore, logger *logrus.Logger) UserHandler {
+func NewUserHandler(userStore docshelf.UserStore, logger *logrus.Logger) UserHandler {
 	return UserHandler{
 		userStore: userStore,
 		log:       logger,
@@ -49,7 +49,7 @@ func (h UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 // PostUser handles requests for posting new (or updating existing) Users.
 func (h UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
-	var user skribe.User
+	var user docshelf.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		h.log.Error(err)
 		badRequest(w, "invalid request body, could not create user")
