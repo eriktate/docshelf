@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const defaultFilemode = 0750
+
 // A Store implements the skribe FileStore interface. It manages file storage on the local disk.
 type Store struct {
 	Root string
@@ -16,7 +18,7 @@ type Store struct {
 
 // New returns a new Store struct based on the given rootPath.
 func New(rootPath string) (Store, error) {
-	return Store{rootPath}, os.MkdirAll(rootPath, 0777)
+	return Store{rootPath}, os.MkdirAll(rootPath, defaultFilemode)
 }
 
 // ReadFile reads the content from an existing file on disk.
@@ -35,12 +37,12 @@ func (s Store) WriteFile(path string, content []byte) error {
 	folders := strings.Join(parts[0:len(parts)-1], "/")
 
 	if folders != "" {
-		if err := os.MkdirAll(s.fullPath(folders), 0777); err != nil {
+		if err := os.MkdirAll(s.fullPath(folders), defaultFilemode); err != nil {
 			return errors.Wrap(err, "failed to create intermediate directories")
 		}
 	}
 
-	return errors.Wrap(ioutil.WriteFile(s.fullPath(path), content, 0777), "failed to write file")
+	return errors.Wrap(ioutil.WriteFile(s.fullPath(path), content, defaultFilemode), "failed to write file")
 }
 
 // RemoveFile removes an existing file from disk.

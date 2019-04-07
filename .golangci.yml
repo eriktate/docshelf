@@ -3,6 +3,11 @@ run:
 
 issues:
   exclude-use-default: false
+  exclude:
+    # TODO (erik): Not sure if I actually like this...but it makes deferring cleanup really convenient.
+    # Leaving this comment to remind later if we forget why errcheck doesn't complain about functions
+    # like Close() or Flush().
+    - .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv).
 linters:
   disable-all: true
   enable:

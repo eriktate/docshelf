@@ -49,7 +49,7 @@ func (s Server) Start() error {
 	return nil
 }
 
-// CheckStores returns an error if the Server is missing any required Stores.
+// CheckHandlers returns an error if the Server contains any invalid handlers.
 func (s Server) CheckHandlers() error {
 	if s.GroupStore == nil {
 		return errors.New("no GroupStore set")

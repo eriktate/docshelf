@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// FileStore is a mock implementation of the FileStore interface.
 type FileStore struct {
 	files map[string][]byte
 
@@ -15,10 +16,12 @@ type FileStore struct {
 	ForceError       bool
 }
 
+// NewFileStore returns a new mock FileStore struct.
 func NewFileStore() *FileStore {
 	return &FileStore{files: make(map[string][]byte)}
 }
 
+// ReadFile implements the FileStore interface.
 func (m *FileStore) ReadFile(path string) ([]byte, error) {
 	if m.ForceError {
 		return nil, errors.New("forced error")
@@ -27,6 +30,7 @@ func (m *FileStore) ReadFile(path string) ([]byte, error) {
 	return m.files[path], nil
 }
 
+// WriteFile implements the FileStore interface.
 func (m *FileStore) WriteFile(path string, data []byte) error {
 	if m.ForceError {
 		return errors.New("forced error")
@@ -36,6 +40,7 @@ func (m *FileStore) WriteFile(path string, data []byte) error {
 	return nil
 }
 
+// RemoveFile implements the FileStore interface.
 func (m *FileStore) RemoveFile(path string) error {
 	if m.ForceError {
 		return errors.New("forced error")
@@ -45,6 +50,7 @@ func (m *FileStore) RemoveFile(path string) error {
 	return nil
 }
 
+// ListDir implements the FileStore interface.
 func (m *FileStore) ListDir(path string) ([]string, error) {
 	if m.ForceError {
 		return nil, errors.New("forced error")

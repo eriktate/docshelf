@@ -352,6 +352,7 @@ func (s Store) PutDoc(ctx context.Context, doc skribe.Doc) error {
 	return nil
 }
 
+// TagDoc tags an existing document with the given tags.
 func (s Store) TagDoc(ctx context.Context, path string, tags ...string) error {
 	if err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(tagBucket)
