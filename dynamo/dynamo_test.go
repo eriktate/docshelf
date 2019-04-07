@@ -24,7 +24,15 @@ func init() {
 	}
 }
 
+func checkIntegrationTest() bool {
+	return os.Getenv("DS_INTEGRATION_TEST") == "1"
+}
+
 func Test_PutGetRemoveUser(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	ctx := context.Background()
 
@@ -84,6 +92,10 @@ func Test_PutGetRemoveUser(t *testing.T) {
 }
 
 func Test_ListUsers(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	ctx := context.Background()
 
@@ -134,6 +146,10 @@ func Test_ListUsers(t *testing.T) {
 }
 
 func Test_PutGetRemoveDoc(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	ctx := context.Background()
 
@@ -175,6 +191,10 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 }
 
 func Test_ListDocs(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	ctx := context.Background()
 
@@ -220,6 +240,10 @@ func Test_ListDocs(t *testing.T) {
 }
 
 func Test_TagLifecycle(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	ctx := context.Background()
 
