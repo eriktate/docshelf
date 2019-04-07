@@ -22,6 +22,10 @@ func init() {
 	if err := os.Setenv("DS_DYNAMO_TAG_TABLE", "ds_test_tag"); err != nil {
 		panic("This should never happen")
 	}
+
+	if err := os.Setenv("DS_DYNAMO_GROUP_TABLE", "ds_test_group"); err != nil {
+		panic("This should never happen")
+	}
 }
 
 func checkIntegrationTest() bool {
@@ -315,6 +319,10 @@ func Test_TagLifecycle(t *testing.T) {
 }
 
 func Test_PutGetRemoveGroup(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
 	// SETUP
 	ctx := context.Background()
 
