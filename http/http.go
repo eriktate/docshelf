@@ -4,16 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/eriktate/skribe"
+	"github.com/go-chi/chi"
 	log "github.com/sirupsen/logrus"
 )
 
 // A Server is a collection of stores that get wired up to HTTP endpoint.
 type Server struct {
-	DocStore    skribe.DocStore
-	UserStore   skribe.UserStore
+	DocHandler  DocHandler
+	UserHandler UserHandler
 	GroupStore  skribe.GroupStore
 	PolicyStore skribe.PolicyStore
 	Auth        skribe.Authenticator
@@ -32,27 +32,20 @@ func NewServer(addr string, port uint) Server {
 
 // Start fires up an HTTP server and listens for incoming requests.
 func (s Server) Start() error {
+	log.Info("Starting doc server...")
 	// if err := s.CheckStores(); err != nil {
 	// 	return err
 	// }
 
-	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.addr, s.port), http.HandlerFunc(s.handler)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.addr, s.port), s.buildRoutes()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// CheckStores returns an error if the Server is missing any required Stores.
-func (s Server) CheckStores() error {
-	if s.DocStore == nil {
-		return errors.New("no DocStore set")
-	}
-
-	if s.UserStore == nil {
-		return errors.New("no UserStore set")
-	}
-
+// CheckHandlers returns an error if the Server contains any invalid handlers.
+func (s Server) CheckHandlers() error {
 	if s.GroupStore == nil {
 		return errors.New("no GroupStore set")
 	}
@@ -68,83 +61,28 @@ func (s Server) CheckStores() error {
 	return nil
 }
 
-func (s Server) handler(w http.ResponseWriter, r *http.Request) {
-	part := shiftPath(r)
-	if part == "" {
-		log.Error(errors.New("no resource specified"))
-		badRequest(w, "you need to specify a resource")
-		return
-	}
+func (s Server) buildRoutes() chi.Router {
+	mux := chi.NewRouter()
+	mux.Route("/api", func(r chi.Router) {
+		r.Route("/user", func(r chi.Router) {
+			r.Get("/", s.UserHandler.GetUsers)
+			r.Post("/", s.UserHandler.PostUser)
+			r.Get("/{id}", s.UserHandler.GetUser)
+			r.Delete("/{id}", s.UserHandler.DeleteUser)
+		})
 
-	switch part {
-	case "user":
-		HandleUser(s.UserStore).ServeHTTP(w, r)
-		return
-	case "doc":
-		HandleDoc(s.DocStore).ServeHTTP(w, r)
-	case "group":
-		statusOk(w, []byte("unimplemented"))
-	case "policy":
-		statusOk(w, []byte("unimplemented"))
-	}
-}
+		r.Route("/doc", func(r chi.Router) {
+			r.Post("/", s.DocHandler.PostDoc)
+			r.Get("/list", s.DocHandler.GetList)
+			r.Get("/list/{prefix}", s.DocHandler.GetList)
+			r.Get("/{path}", s.DocHandler.GetDoc)
+			r.Delete("/{path}", s.DocHandler.DeleteDoc)
+		})
 
-func shiftPath(r *http.Request) string {
-	log.WithField("path", r.URL.Path).Info("Path")
-	if r.URL.Path == "/" {
-		return ""
-	}
+		r.Post("/tag", s.DocHandler.PostTag)
+	})
 
-	parts := strings.Split(r.URL.Path, "/")
-	newPath := "/"
-	if len(parts) > 2 {
-		newPath += strings.Join(parts[2:], "/")
-	}
+	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
 
-	r.URL.Path = newPath
-
-	return parts[1]
-}
-
-func serverError(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusInternalServerError)
-	if _, err := w.Write([]byte(msg)); err != nil {
-		log.WithError(err).Error()
-	}
-}
-
-func statusOk(w http.ResponseWriter, data []byte) {
-	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write(data); err != nil {
-		log.WithError(err).Error()
-	}
-}
-
-func badRequest(w http.ResponseWriter, msg string) {
-	w.WriteHeader(http.StatusBadRequest)
-	if _, err := w.Write([]byte(msg)); err != nil {
-		log.WithError(err).Error()
-	}
-}
-
-func noContent(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNoContent)
-	if _, err := w.Write(nil); err != nil {
-		log.WithError(err).Error()
-	}
-}
-
-func notAllowed(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
-	if _, err := w.Write(nil); err != nil {
-		log.WithError(err).Error()
-	}
-}
-
-func notFound(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
-	if _, err := w.Write(nil); err != nil {
-		log.WithError(err).Error()
-	}
+	return mux
 }

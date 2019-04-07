@@ -8,9 +8,11 @@ import (
 	"github.com/eriktate/skribe/bolt"
 	"github.com/eriktate/skribe/disk"
 	"github.com/eriktate/skribe/http"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	logger := logrus.New()
 	server := http.NewServer(getEnvString("SKRIBE_HOST", "localhost"), getEnvUint("SKRIBE_PORT", 1337))
 
 	fs, err := disk.New("documents")
@@ -23,8 +25,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server.UserStore = db
-	server.DocStore = db
+	server.UserHandler = http.NewUserHandler(db, logger)
+	server.DocHandler = http.NewDocHandler(db, logger)
 
 	if err := server.Start(); err != nil {
 		log.Fatal(err)

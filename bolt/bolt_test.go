@@ -249,7 +249,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	ctx := context.Background()
 	defer os.Remove(dbName) // cleanup database after test
 
-	store, err := New(dbName, mock.NewMockFileStore())
+	store, err := New(dbName, mock.NewFileStore())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,49 +287,122 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	}
 }
 
-// func Test_ListDocs(t *testing.T) {
-// 	// SETUP
-// 	ctx := context.Background()
+func Test_ListDocs(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
 
-// 	store, err := New(dbName, disk.New("documents"))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	defer store.Close()
-// 	defer os.Remove(dbName) // cleanup database after test
+	store, err := New(dbName, mock.NewFileStore())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	defer os.Remove(dbName) // cleanup database after test
 
-// 	doc1 := skribe.Doc{
-// 		Path:      "test1.md",
-// 		Title:     "Test Document 1",
-// 		Content:   []byte("This is a test document, for testing purposes only"),
-// 		CreatedBy: xid.New().String(),
-// 		UpdatedBy: xid.New().String(),
-// 	}
+	doc1 := skribe.Doc{
+		Path:      "test1.md",
+		Title:     "Test Document 1",
+		Content:   []byte("This is a test document, for testing purposes only"),
+		CreatedBy: xid.New().String(),
+		UpdatedBy: xid.New().String(),
+	}
 
-// 	doc2 := skribe.Doc{
-// 		Path:      "test2.md",
-// 		Title:     "Test Document 2",
-// 		Content:   []byte("This is a test document, for testing purposes only"),
-// 		CreatedBy: xid.New().String(),
-// 		UpdatedBy: xid.New().String(),
-// 	}
+	doc2 := skribe.Doc{
+		Path:      "test2.md",
+		Title:     "Test Document 2",
+		Content:   []byte("This is a test document, for testing purposes only"),
+		CreatedBy: xid.New().String(),
+		UpdatedBy: xid.New().String(),
+	}
 
-// 	// RUN
-// 	if err := store.PutDoc(ctx, doc1); err != nil {
-// 		t.Fatal(err)
-// 	}
+	// RUN
+	if err := store.PutDoc(ctx, doc1); err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err := store.PutDoc(ctx, doc2); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err := store.PutDoc(ctx, doc2); err != nil {
+		t.Fatal(err)
+	}
 
-// 	list, err := store.ListDocs(ctx, "")
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	list, err := store.ListDocs(ctx, "")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	// ASSERT
-// 	if len(list) != 2 {
-// 		t.Fatal("listing didn't return enough results")
-// 	}
-// }
+	// ASSERT
+	if len(list) != 2 {
+		t.Fatal("listing didn't return enough results")
+	}
+}
+
+func Test_TagLifecycle(t *testing.T) {
+	// SETUP
+	ctx := context.Background()
+
+	store, err := New(dbName, mock.NewFileStore())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	defer os.Remove(dbName) // cleanup database after test
+
+	doc1 := skribe.Doc{
+		Path:      "test1.md",
+		Title:     "Test Document 1",
+		Content:   []byte("This is a test document, for testing purposes only"),
+		CreatedBy: xid.New().String(),
+		UpdatedBy: xid.New().String(),
+	}
+
+	doc2 := skribe.Doc{
+		Path:      "test2.md",
+		Title:     "Test Document 2",
+		Content:   []byte("This is a test document, for testing purposes only"),
+		CreatedBy: xid.New().String(),
+		UpdatedBy: xid.New().String(),
+	}
+
+	// RUN
+	if err := store.PutDoc(ctx, doc1); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.PutDoc(ctx, doc2); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.TagDoc(ctx, doc1.Path, "test", "one"); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.TagDoc(ctx, doc2.Path, "test", "two"); err != nil {
+		t.Fatal(err)
+	}
+
+	testTag, err := store.ListDocs(ctx, "", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	oneTag, err := store.ListDocs(ctx, "", "one")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	twoTag, err := store.ListDocs(ctx, "", "two")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// ASSERT
+	if len(testTag) != 2 {
+		t.Fatal("listing didn't return enough results")
+	}
+
+	if len(oneTag) != 1 && oneTag[0].Path == doc1.Path {
+		t.Fatal("listing returned wrong results for tag 'one'")
+	}
+
+	if len(twoTag) != 1 && twoTag[0].Path == doc2.Path {
+		t.Fatal("listing returned wrong results for tag 'two'")
+	}
+}
