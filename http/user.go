@@ -5,99 +5,101 @@ import (
 	"net/http"
 
 	"github.com/eriktate/skribe"
-	log "github.com/sirupsen/logrus"
+	"github.com/go-chi/chi"
+	"github.com/sirupsen/logrus"
 )
 
+// ID is a struct for marshaling to and from JSON documents containing an ID.
 type ID struct {
 	ID string `json:"id"`
 }
 
-func HandleUser(userStore skribe.UserStore) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		part := shiftPath(r)
-		log.WithField("part", part).Info("Path")
+// A UserHandler has methods that can handle HTTP requests for Users.
+type UserHandler struct {
+	userStore skribe.UserStore
+	log       *logrus.Logger
+}
 
-		if part == "" {
-			switch r.Method {
-			case http.MethodGet:
-				users, err := userStore.ListUsers(r.Context())
-				if err != nil {
-					log.Error(err)
-					serverError(w, "something went wrong while fetching user list")
-					return
-				}
+// NewUserHandler returns a UserHandler struct using the given UserStore and Logger instance.
+func NewUserHandler(userStore skribe.UserStore, logger *logrus.Logger) UserHandler {
+	return UserHandler{
+		userStore: userStore,
+		log:       logger,
+	}
+}
 
-				data, err := json.Marshal(users)
-				if err != nil {
-					log.Error(err)
-					serverError(w, "something went wrong while serializing user list")
-					return
-				}
+// GetUsers handles requests for listing all Users.
+func (h UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.userStore.ListUsers(r.Context())
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while fetching user list")
+		return
+	}
 
-				statusOk(w, data)
-				return
+	data, err := json.Marshal(users)
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while serializing user list")
+		return
+	}
 
-			case http.MethodPost:
-				var user skribe.User
-				if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-					log.Error(err)
-					badRequest(w, "invalid request body, could not create user")
-					return
-				}
+	okJSON(w, data)
+}
 
-				id, err := userStore.PutUser(r.Context(), user)
-				if err != nil {
-					log.Error(err)
-					serverError(w, "something went wrong while saving user")
-					return
-				}
+// PostUser handles requests for posting new (or updating existing) Users.
+func (h UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
+	var user skribe.User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		h.log.Error(err)
+		badRequest(w, "invalid request body, could not create user")
+		return
+	}
 
-				data, err := json.Marshal(ID{id})
-				if err != nil {
-					log.Error(err)
-					serverError(w, "user was created, but the id couldn't be returned")
-					return
-				}
+	id, err := h.userStore.PutUser(r.Context(), user)
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while saving user")
+		return
+	}
 
-				statusOk(w, data)
-				return
+	data, err := json.Marshal(ID{id})
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "user was created, but the id couldn't be returned")
+		return
+	}
 
-			default:
-				badRequest(w, "method unsupported")
-				return
-			}
-		}
+	okJSON(w, data)
+}
 
-		switch r.Method {
-		case http.MethodGet:
-			user, err := userStore.GetUser(r.Context(), part)
-			if err != nil {
-				log.Error(err)
-				serverError(w, "something went wrong while fetching user")
-				return
-			}
+// GetUser handles requests for fetching specific Users.
+func (h UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	user, err := h.userStore.GetUser(r.Context(), id)
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while fetching user")
+		return
+	}
 
-			data, err := json.Marshal(user)
-			if err != nil {
-				log.Error(err)
-				serverError(w, "something went wrong while serializing user")
-				return
-			}
+	data, err := json.Marshal(user)
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while serializing user")
+		return
+	}
 
-			log.Info("Returning found user")
-			statusOk(w, data)
-			return
-		case http.MethodDelete:
-			if err := userStore.RemoveUser(r.Context(), part); err != nil {
-				log.Error(err)
-				serverError(w, "something went wrong while deleting user")
-			}
+	okJSON(w, data)
+}
 
-			noContent(w)
-			return
-		default:
-			badRequest(w, "method unsupported")
-			return
-		}
-	})
+// DeleteUser handles requests for deleting specific Users.
+func (h UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.userStore.RemoveUser(r.Context(), id); err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while deleting user")
+	}
+
+	noContent(w)
 }
