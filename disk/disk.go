@@ -11,7 +11,7 @@ import (
 
 const defaultFilemode = 0750
 
-// A Store implements the skribe FileStore interface. It manages file storage on the local disk.
+// A Store implements the docshelf FileStore interface. It manages file storage on the local disk.
 type Store struct {
 	Root string
 }

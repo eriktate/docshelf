@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/go-chi/chi"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,9 +14,9 @@ import (
 type Server struct {
 	DocHandler  DocHandler
 	UserHandler UserHandler
-	GroupStore  skribe.GroupStore
-	PolicyStore skribe.PolicyStore
-	Auth        skribe.Authenticator
+	GroupStore  docshelf.GroupStore
+	PolicyStore docshelf.PolicyStore
+	Auth        docshelf.Authenticator
 
 	addr string
 	port uint

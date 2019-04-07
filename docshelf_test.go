@@ -1,4 +1,4 @@
-package skribe
+package docshelf
 
 import (
 	"testing"

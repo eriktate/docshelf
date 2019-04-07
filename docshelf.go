@@ -1,11 +1,11 @@
-package skribe
+package docshelf
 
 import (
 	"context"
 	"time"
 )
 
-// A User is the identity of anyone using skribe.
+// A User is the identity of anyone using docshelf.
 type User struct {
 	ID        string     `json:"id"`
 	Email     string     `json:"email"`
@@ -26,7 +26,7 @@ type Group struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// A Doc is a full skribe document. This includes metadata as well as content.
+// A Doc is a full docshelf document. This includes metadata as well as content.
 type Doc struct {
 	Path      string    `json:"path"`
 	Title     string    `json:"title"`
@@ -50,7 +50,7 @@ type Policy struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// A DocStore knows how to store and retrieve skribe documents.
+// A DocStore knows how to store and retrieve docshelf documents.
 type DocStore interface {
 	GetDoc(ctx context.Context, path string) (Doc, error)
 	ListDocs(ctx context.Context, path string, tags ...string) ([]Doc, error)
@@ -59,7 +59,7 @@ type DocStore interface {
 	RemoveDoc(ctx context.Context, path string) error
 }
 
-// A UserStore knows how to store and retrieve skribe users.
+// A UserStore knows how to store and retrieve docshelf users.
 type UserStore interface {
 	GetUser(ctx context.Context, id string) (User, error)
 	GetEmail(ctx context.Context, email string) (User, error)
@@ -68,14 +68,14 @@ type UserStore interface {
 	RemoveUser(ctx context.Context, id string) error
 }
 
-// A GroupStore knows how to store and retrieve skribe Groups.
+// A GroupStore knows how to store and retrieve docshelf Groups.
 type GroupStore interface {
 	GetGroup(ctx context.Context, id string) (Group, error)
 	PutGroup(ctx context.Context, group Group) (string, error)
 	RemoveGroup(ctx context.Context, id string) error
 }
 
-// A PolicyStore knows how to store and retrieve skribe Policies.
+// A PolicyStore knows how to store and retrieve docshelf Policies.
 type PolicyStore interface {
 	GetPolicy(ctx context.Context, id string) (Policy, error)
 	PutPolicy(ctx context.Context, policy Policy) (string, error)
@@ -87,7 +87,7 @@ type Authenticator interface {
 	Authenticate(ctx context.Context, email, token string)
 }
 
-// A FileStore knows how to store and retrieve skribe document contents.
+// A FileStore knows how to store and retrieve docshelf document contents.
 type FileStore interface {
 	ReadFile(path string) ([]byte, error)
 	WriteFile(path string, data []byte) error

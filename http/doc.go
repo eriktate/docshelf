@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/go-chi/chi"
 	"github.com/russross/blackfriday"
 	"github.com/sirupsen/logrus"
@@ -23,12 +23,12 @@ type TagReq struct {
 
 // A DocHandler has methods that can handle HTTP requests for Docs.
 type DocHandler struct {
-	docStore skribe.DocStore
+	docStore docshelf.DocStore
 	log      *logrus.Logger
 }
 
 // NewDocHandler returns a DocHandler struct using the given DocStore and Logger instance.
-func NewDocHandler(docStore skribe.DocStore, logger *logrus.Logger) DocHandler {
+func NewDocHandler(docStore docshelf.DocStore, logger *logrus.Logger) DocHandler {
 	return DocHandler{
 		docStore: docStore,
 		log:      logger,
@@ -37,7 +37,7 @@ func NewDocHandler(docStore skribe.DocStore, logger *logrus.Logger) DocHandler {
 
 // PostDoc handles requests for posting new (or existing) Docs.
 func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
-	var doc skribe.Doc
+	var doc docshelf.Doc
 	if err := json.NewDecoder(r.Body).Decode(&doc); err != nil {
 		h.log.Error(err)
 		badRequest(w, "invalid request body, could not save document")
@@ -101,7 +101,7 @@ func (h DocHandler) GetDoc(w http.ResponseWriter, r *http.Request) {
 	path := chi.URLParam(r, "path")
 	doc, err := h.docStore.GetDoc(r.Context(), path)
 	if err != nil {
-		if skribe.CheckDoesNotExist(err) {
+		if docshelf.CheckDoesNotExist(err) {
 			notFound(w)
 			return
 		}

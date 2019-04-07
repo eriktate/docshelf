@@ -5,22 +5,22 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/eriktate/skribe/bolt"
-	"github.com/eriktate/skribe/disk"
-	"github.com/eriktate/skribe/http"
+	"github.com/eriktate/docshelf/bolt"
+	"github.com/eriktate/docshelf/disk"
+	"github.com/eriktate/docshelf/http"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	logger := logrus.New()
-	server := http.NewServer(getEnvString("SKRIBE_HOST", "localhost"), getEnvUint("SKRIBE_PORT", 1337))
+	server := http.NewServer(getEnvString("DS_HOST", "localhost"), getEnvUint("DS_PORT", 1337))
 
 	fs, err := disk.New("documents")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := bolt.New("skribe.db", fs)
+	db, err := bolt.New("docshelf.db", fs)
 	if err != nil {
 		log.Fatal(err)
 	}
