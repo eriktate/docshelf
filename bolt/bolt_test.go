@@ -249,7 +249,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	ctx := context.Background()
 	defer os.Remove(dbName) // cleanup database after test
 
-	store, err := New(dbName, mock.NewMockFileStore())
+	store, err := New(dbName, mock.NewFileStore())
 	if err != nil {
 		t.Fatal(err)
 	}

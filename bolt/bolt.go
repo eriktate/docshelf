@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -297,16 +298,22 @@ func (s Store) ListTags(ctx context.Context, tags ...string) ([]skribe.Doc, erro
 			if docIDs == nil {
 				docIDs = ids
 			} else {
-				docIDs = isect(docIDs, ids)
+				docIDs = intersect(docIDs, ids)
 			}
-
 		}
 
 		b = tx.Bucket(docBucket)
 		for _, id := range docIDs {
+			var doc skribe.Doc
 			val := b.Get([]byte(id))
-			// TODO: Unmarshal into documents and return results.
+			if err := json.Unmarshal(val, &doc); err != nil {
+				return err
+			}
+
+			docs = append(docs, doc)
 		}
+
+		return nil
 	}); err != nil {
 		return nil, err
 	}
@@ -340,6 +347,47 @@ func (s Store) PutDoc(ctx context.Context, doc skribe.Doc) error {
 			return errors.Wrap(err, "failed to put cleanup file after bolt failure")
 		}
 		return errors.Wrap(err, "failed to put doc into bolt")
+	}
+
+	return nil
+}
+
+func (s Store) TagDoc(ctx context.Context, path string, tags ...string) error {
+	if err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(tagBucket)
+		for _, t := range tags {
+			val := b.Get([]byte(t))
+			if val == nil {
+				if err := b.Put([]byte(t), []byte(fmt.Sprintf("[\"%s\"]", path))); err != nil {
+					return err
+				}
+
+				continue
+			}
+
+			var ids []string
+			if err := json.Unmarshal(val, &ids); err != nil {
+				return err
+			}
+
+			if contains(ids, path) {
+				continue
+			}
+
+			ids = append(ids, path)
+			jsonIds, err := json.Marshal(ids)
+			if err != nil {
+				return err
+			}
+
+			if err := b.Put([]byte(t), jsonIds); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "failed to tag document")
 	}
 
 	return nil
@@ -422,20 +470,7 @@ func initBuckets(tx *bolt.Tx) error {
 	return nil
 }
 
-func intersect(ids ...[]string) []string {
-	var workingSet []string
-	if ids == nil || len(ids) == 0 {
-		workingSet = ids[0]
-	}
-
-	for i := 1; i < len(ids); i++ {
-		workingSet = isect(workingSet, ids[i])
-	}
-
-	return workingSet
-}
-
-func isect(left, right []string) []string {
+func intersect(left, right []string) []string {
 	intersection := make([]string, 0)
 	for _, el := range left {
 		if contains(right, el) {

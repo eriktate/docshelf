@@ -1,12 +1,16 @@
 run:
   deadline: 1m
 
+issues:
+  exclude-use-default: false
 linters:
   disable-all: true
   enable:
     - deadcode
     - errcheck
     - gosimple
+    - golint
+    - gofmt
     - govet
     - ineffassign
     - staticcheck
@@ -16,3 +20,4 @@ linters:
     - goconst
     - typecheck
     - gocyclo
+    - gosec

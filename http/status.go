@@ -13,7 +13,7 @@ func serverError(w http.ResponseWriter, msg string) {
 	}
 }
 
-func okJson(w http.ResponseWriter, data []byte) {
+func okJSON(w http.ResponseWriter, data []byte) {
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(data); err != nil {
@@ -21,7 +21,7 @@ func okJson(w http.ResponseWriter, data []byte) {
 	}
 }
 
-func okHtml(w http.ResponseWriter, data []byte) {
+func okHTML(w http.ResponseWriter, data []byte) {
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(data); err != nil {
@@ -38,13 +38,6 @@ func badRequest(w http.ResponseWriter, msg string) {
 
 func noContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
-	if _, err := w.Write(nil); err != nil {
-		log.WithError(err).Error()
-	}
-}
-
-func notAllowed(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
 	if _, err := w.Write(nil); err != nil {
 		log.WithError(err).Error()
 	}

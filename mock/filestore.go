@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type MockFileStore struct {
+type FileStore struct {
 	files map[string][]byte
 
 	ReadFileCalled   int
@@ -15,11 +15,11 @@ type MockFileStore struct {
 	ForceError       bool
 }
 
-func NewMockFileStore() *MockFileStore {
-	return &MockFileStore{files: make(map[string][]byte)}
+func NewFileStore() *FileStore {
+	return &FileStore{files: make(map[string][]byte)}
 }
 
-func (m *MockFileStore) ReadFile(path string) ([]byte, error) {
+func (m *FileStore) ReadFile(path string) ([]byte, error) {
 	if m.ForceError {
 		return nil, errors.New("forced error")
 	}
@@ -27,7 +27,7 @@ func (m *MockFileStore) ReadFile(path string) ([]byte, error) {
 	return m.files[path], nil
 }
 
-func (m *MockFileStore) WriteFile(path string, data []byte) error {
+func (m *FileStore) WriteFile(path string, data []byte) error {
 	if m.ForceError {
 		return errors.New("forced error")
 	}
@@ -36,7 +36,7 @@ func (m *MockFileStore) WriteFile(path string, data []byte) error {
 	return nil
 }
 
-func (m *MockFileStore) RemoveFile(path string) error {
+func (m *FileStore) RemoveFile(path string) error {
 	if m.ForceError {
 		return errors.New("forced error")
 	}
@@ -45,7 +45,7 @@ func (m *MockFileStore) RemoveFile(path string) error {
 	return nil
 }
 
-func (m *MockFileStore) ListDir(path string) ([]string, error) {
+func (m *FileStore) ListDir(path string) ([]string, error) {
 	if m.ForceError {
 		return nil, errors.New("forced error")
 	}
