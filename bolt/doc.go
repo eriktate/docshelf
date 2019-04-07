@@ -9,16 +9,16 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/pkg/errors"
 )
 
-// GetDoc fetches a skribe Document from bolt. It will also read and package the Content from an underlying FileStore.
-func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
-	var doc skribe.Doc
+// GetDoc fetches a docshelf Document from bolt. It will also read and package the Content from an underlying FileStore.
+func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
+	var doc docshelf.Doc
 
 	if err := s.fetchItem(ctx, docBucket, path, &doc); err != nil {
-		if skribe.CheckDoesNotExist(err) {
+		if docshelf.CheckDoesNotExist(err) {
 			return doc, err
 		}
 
@@ -34,10 +34,10 @@ func (s Store) GetDoc(ctx context.Context, path string) (skribe.Doc, error) {
 	return doc, nil
 }
 
-// ListDocs fetches a slice of skribe Document metadata from bolt that fit the given prefix or
+// ListDocs fetches a slice of docshelf Document metadata from bolt that fit the given prefix or
 // tags supplied.
-func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]skribe.Doc, error) {
-	var docs []skribe.Doc
+func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]docshelf.Doc, error) {
+	var docs []docshelf.Doc
 	if err := s.db.View(func(tx *bolt.Tx) error {
 		// prefer to filter by tag first if supplied.
 		if len(tags) > 0 {
@@ -52,7 +52,7 @@ func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]s
 				return nil
 			}
 
-			listing := make([]skribe.Doc, 0, len(docs))
+			listing := make([]docshelf.Doc, 0, len(docs))
 			for _, doc := range tagged {
 				if strings.HasPrefix(doc.Path, prefix) {
 					listing = append(listing, doc)
@@ -70,7 +70,7 @@ func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]s
 
 		// TODO (erik): confirm behavior if prefix is blank.
 		for k, v := c.Seek(pre); k != nil && bytes.HasPrefix(k, pre); k, v = c.Next() {
-			var doc skribe.Doc
+			var doc docshelf.Doc
 			if err := json.Unmarshal(v, &doc); err != nil {
 				return errors.Wrap(err, "failed to unmarshal doc from bolt")
 			}
@@ -86,7 +86,7 @@ func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]s
 	return docs, nil
 }
 
-func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) ([]skribe.Doc, error) {
+func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) ([]docshelf.Doc, error) {
 	var docIDs []string
 	for _, t := range tags {
 		var ids []string
@@ -101,9 +101,9 @@ func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) (
 		}
 	}
 
-	var docs []skribe.Doc
+	var docs []docshelf.Doc
 	for _, id := range docIDs {
-		var doc skribe.Doc
+		var doc docshelf.Doc
 		if err := s.getItem(ctx, tx, docBucket, id, &doc); err != nil {
 			continue
 		}
@@ -114,14 +114,14 @@ func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) (
 	return docs, nil
 }
 
-// PutDoc creates or updates an existing skribe Doc in bolt. It will also store the Content in an underlying FileStore.
-func (s Store) PutDoc(ctx context.Context, doc skribe.Doc) error {
+// PutDoc creates or updates an existing docshelf Doc in bolt. It will also store the Content in an underlying FileStore.
+func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 	if doc.Path == "" {
 		return errors.New("can not create a new doc without a path")
 	}
 
 	if _, err := s.GetDoc(ctx, doc.Path); err != nil {
-		if !skribe.CheckDoesNotExist(err) {
+		if !docshelf.CheckDoesNotExist(err) {
 			return errors.Wrap(err, "could not verify existing file")
 		}
 
@@ -187,7 +187,7 @@ func (s Store) TagDoc(ctx context.Context, path string, tags ...string) error {
 	return nil
 }
 
-// RemoveDoc removes a skribe Doc from bolt as well as the underlying FileStore.
+// RemoveDoc removes a docshelf Doc from bolt as well as the underlying FileStore.
 func (s Store) RemoveDoc(ctx context.Context, path string) error {
 	if err := s.fs.RemoveFile(path); err != nil {
 		return errors.Wrap(err, "failed to remove doc from file store")

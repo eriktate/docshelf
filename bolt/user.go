@@ -6,41 +6,41 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 )
 
-// GetUser fetches an existing skribe User from boltdb.
-func (s Store) GetUser(ctx context.Context, id string) (skribe.User, error) {
-	var user skribe.User
+// GetUser fetches an existing docshelf User from boltdb.
+func (s Store) GetUser(ctx context.Context, id string) (docshelf.User, error) {
+	var user docshelf.User
 
 	if err := s.fetchItem(ctx, userBucket, id, &user); err != nil {
 		return user, err
 	}
 
 	if user.DeletedAt != nil {
-		return skribe.User{}, skribe.NewErrRemoved("user no longer exists in bolt")
+		return docshelf.User{}, docshelf.NewErrRemoved("user no longer exists in bolt")
 	}
 
 	return user, nil
 }
 
-// GetEmail fetches an existing skribe User from boltdb given an email.
-func (s Store) GetEmail(ctx context.Context, id string) (skribe.User, error) {
+// GetEmail fetches an existing docshelf User from boltdb given an email.
+func (s Store) GetEmail(ctx context.Context, id string) (docshelf.User, error) {
 	// TODO (erik): Needs to be implemented.
-	return skribe.User{}, errors.New("unimplemented")
+	return docshelf.User{}, errors.New("unimplemented")
 }
 
-// ListUsers returns all skribe Users stored in bolt db.
-func (s Store) ListUsers(ctx context.Context) ([]skribe.User, error) {
-	users := make([]skribe.User, 0)
+// ListUsers returns all docshelf Users stored in bolt db.
+func (s Store) ListUsers(ctx context.Context) ([]docshelf.User, error) {
+	users := make([]docshelf.User, 0)
 
 	if err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(userBucket)
 
 		if err := b.ForEach(func(k, v []byte) error {
-			var user skribe.User
+			var user docshelf.User
 			if err := json.Unmarshal(v, &user); err != nil {
 				return err
 			}
@@ -65,8 +65,8 @@ func (s Store) ListUsers(ctx context.Context) ([]skribe.User, error) {
 	return users, nil
 }
 
-// PutUser creates a new skribe User or updates an existing one in boltdb.
-func (s Store) PutUser(ctx context.Context, user skribe.User) (string, error) {
+// PutUser creates a new docshelf User or updates an existing one in boltdb.
+func (s Store) PutUser(ctx context.Context, user docshelf.User) (string, error) {
 	if user.ID == "" {
 		user.ID = xid.New().String()
 		user.CreatedAt = time.Now()
@@ -89,7 +89,7 @@ func (s Store) RemoveUser(ctx context.Context, id string) error {
 		key := []byte(id)
 		val := b.Get(key)
 
-		var user skribe.User
+		var user docshelf.User
 		if err := json.Unmarshal(val, &user); err != nil {
 			return err
 		}

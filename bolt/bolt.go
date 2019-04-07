@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/boltdb/bolt"
-	"github.com/eriktate/skribe"
+	"github.com/eriktate/docshelf"
 	"github.com/pkg/errors"
 )
 
@@ -17,15 +17,15 @@ var (
 	tagBucket    = []byte("tag")
 )
 
-// A Store implements several skribe interfaces using boltdb as the backend.
+// A Store implements several docshelf interfaces using boltdb as the backend.
 type Store struct {
 	db *bolt.DB
-	fs skribe.FileStore
+	fs docshelf.FileStore
 }
 
 // New returns a new boltdb Store. This Store can fulfill the interfaces for UserStore, GroupStore, DocStore,
 // and PolicyStore.
-func New(filename string, fs skribe.FileStore) (Store, error) {
+func New(filename string, fs docshelf.FileStore) (Store, error) {
 	db, err := bolt.Open(filename, 0600, nil)
 	if err != nil {
 		return Store{}, err
@@ -48,7 +48,7 @@ func (s Store) getItem(ctx context.Context, tx *bolt.Tx, bucket []byte, id strin
 	b := tx.Bucket(bucket)
 	val := b.Get([]byte(id))
 	if val == nil {
-		return skribe.NewErrDoesNotExist("")
+		return docshelf.NewErrDoesNotExist("")
 	}
 
 	if err := json.Unmarshal(val, out); err != nil {
@@ -63,7 +63,7 @@ func (s Store) fetchItem(ctx context.Context, bucket []byte, id string, out inte
 		b := tx.Bucket(bucket)
 		val := b.Get([]byte(id))
 		if val == nil {
-			return skribe.NewErrDoesNotExist("")
+			return docshelf.NewErrDoesNotExist("")
 		}
 
 		if err := json.Unmarshal(val, out); err != nil {
