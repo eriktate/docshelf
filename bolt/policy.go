@@ -21,13 +21,10 @@ func (s Store) GetPolicy(ctx context.Context, id string) (docshelf.Policy, error
 	return policy, nil
 }
 
-// PutPolicy creates a new docshelf User or updates an existing one in boltdb.
+// PutPolicy creates a new docshelf Policy or updates an existing one in boltdb.
 func (s Store) PutPolicy(ctx context.Context, policy docshelf.Policy) (string, error) {
 	if policy.ID == "" {
 		policy.ID = xid.New().String()
-	}
-
-	if policy.CreatedAt.IsZero() {
 		policy.CreatedAt = time.Now()
 	}
 
@@ -40,7 +37,7 @@ func (s Store) PutPolicy(ctx context.Context, policy docshelf.Policy) (string, e
 	return policy.ID, nil
 }
 
-// RemovePolicy marks a user as deleted in boltdb.
+// RemovePolicy deletes a policy from boltdb.
 func (s Store) RemovePolicy(ctx context.Context, id string) error {
 	return errors.Wrap(s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(userBucket)
