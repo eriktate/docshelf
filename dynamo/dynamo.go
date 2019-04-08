@@ -17,10 +17,11 @@ import (
 )
 
 const (
-	defUserTable  = "ds_user"
-	defDocTable   = "ds_doc"
-	defTagTable   = "ds_tag"
-	defGroupTable = "ds_group"
+	defUserTable   = "ds_user"
+	defDocTable    = "ds_doc"
+	defTagTable    = "ds_tag"
+	defGroupTable  = "ds_group"
+	defPolicyTable = "ds_policy"
 )
 
 // A Store has methods that know how to interact with docshelf data in Dynamo.
@@ -28,10 +29,11 @@ type Store struct {
 	client dynamodbiface.DynamoDBAPI
 	fs     docshelf.FileStore
 
-	userTable  string
-	docTable   string
-	tagTable   string
-	groupTable string
+	userTable   string
+	docTable    string
+	tagTable    string
+	groupTable  string
+	policyTable string
 }
 
 // New creates a new Store struct.
@@ -45,12 +47,13 @@ func New(fs docshelf.FileStore) (Store, error) {
 	svc := dynamodb.New(cfg)
 
 	store := Store{
-		client:     svc,
-		fs:         fs,
-		userTable:  env.GetEnvString("DS_DYNAMO_USER_TABLE", defUserTable),
-		docTable:   env.GetEnvString("DS_DYNAMO_DOC_TABLE", defDocTable),
-		tagTable:   env.GetEnvString("DS_DYNAMO_TAG_TABLE", defTagTable),
-		groupTable: env.GetEnvString("DS_DYNAMO_GROUP_TABLE", defGroupTable),
+		client:      svc,
+		fs:          fs,
+		userTable:   env.GetEnvString("DS_DYNAMO_USER_TABLE", defUserTable),
+		docTable:    env.GetEnvString("DS_DYNAMO_DOC_TABLE", defDocTable),
+		tagTable:    env.GetEnvString("DS_DYNAMO_TAG_TABLE", defTagTable),
+		groupTable:  env.GetEnvString("DS_DYNAMO_GROUP_TABLE", defGroupTable),
+		policyTable: env.GetEnvString("DS_DYNAMO_POLICY_TABLE", defPolicyTable),
 	}
 
 	return store, store.ensureTables()
@@ -121,6 +124,14 @@ func (s Store) ensureTables() error {
 	go func() {
 		defer wg.Done()
 		if err := ensureTable(s.client, s.groupTable, groupTableInput(s.groupTable)); err != nil {
+			ensureErr = err
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := ensureTable(s.client, s.policyTable, policyTableInput(s.policyTable)); err != nil {
 			ensureErr = err
 		}
 	}()
@@ -239,6 +250,24 @@ func groupTableInput(groupTable string) dynamodb.CreateTableInput {
 
 	return dynamodb.CreateTableInput{
 		TableName:            aws.String(groupTable),
+		BillingMode:          dynamodb.BillingModePayPerRequest,
+		AttributeDefinitions: attrDef,
+		KeySchema:            []dynamodb.KeySchemaElement{hashKey},
+	}
+}
+
+func policyTableInput(policyTable string) dynamodb.CreateTableInput {
+	hashKey := dynamodb.KeySchemaElement{
+		AttributeName: aws.String("id"),
+		KeyType:       dynamodb.KeyTypeHash,
+	}
+
+	attrDef := []dynamodb.AttributeDefinition{
+		makeAttrDef("id", dynamodb.ScalarAttributeTypeS),
+	}
+
+	return dynamodb.CreateTableInput{
+		TableName:            aws.String(policyTable),
 		BillingMode:          dynamodb.BillingModePayPerRequest,
 		AttributeDefinitions: attrDef,
 		KeySchema:            []dynamodb.KeySchemaElement{hashKey},

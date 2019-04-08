@@ -26,6 +26,10 @@ func init() {
 	if err := os.Setenv("DS_DYNAMO_GROUP_TABLE", "ds_test_group"); err != nil {
 		panic("This should never happen")
 	}
+
+	if err := os.Setenv("DS_DYNAMO_POLICY_TABLE", "ds_test_policy"); err != nil {
+		panic("This should never happen")
+	}
 }
 
 func checkIntegrationTest() bool {
@@ -370,5 +374,61 @@ func Test_PutGetRemoveGroup(t *testing.T) {
 
 	if getGroup.UpdatedAt.IsZero() {
 		t.Fatal("group UpdatedAt not set properly")
+	}
+}
+
+func Test_PutGetRemovePolicy(t *testing.T) {
+	if !checkIntegrationTest() {
+		return
+	}
+
+	// SETUP
+	ctx := context.Background()
+
+	store, err := New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	policy := docshelf.Policy{
+		Users:  []string{xid.New().String(), xid.New().String(), xid.New().String()},
+		Groups: []string{xid.New().String(), xid.New().String(), xid.New().String()},
+	}
+
+	// RUN
+	id, err := store.PutPolicy(ctx, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getPolicy, err := store.GetPolicy(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.RemovePolicy(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := store.GetPolicy(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	// ASSERT
+
+	if len(getPolicy.Users) != len(policy.Users) {
+		t.Fatal("policy users aren't the same length")
+	}
+
+	if len(getPolicy.Groups) != len(policy.Groups) {
+		t.Fatal("policy groups aren't the same length")
+	}
+
+	if getPolicy.CreatedAt.IsZero() {
+		t.Fatal("policy CreatedAt not set properly")
+	}
+
+	if getPolicy.UpdatedAt.IsZero() {
+		t.Fatal("policy UpdatedAt not set properly")
 	}
 }
