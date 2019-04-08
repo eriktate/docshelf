@@ -2,3 +2,6 @@
 *.db
 documents/
 /main
+node_modules/
+dist/
+.cache/

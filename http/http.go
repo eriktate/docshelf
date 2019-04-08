@@ -7,6 +7,7 @@ import (
 
 	"github.com/eriktate/docshelf"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -63,6 +64,17 @@ func (s Server) CheckHandlers() error {
 
 func (s Server) buildRoutes() chi.Router {
 	mux := chi.NewRouter()
+
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
+
+	mux.Use(cors.Handler)
 	mux.Route("/api", func(r chi.Router) {
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/", s.UserHandler.GetUsers)
