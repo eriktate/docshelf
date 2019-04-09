@@ -50,7 +50,12 @@ const actions = {
       .then(actions.setDocs);
   },
   submitDoc: value => (state, actions) => {
-    post('http://localhost:1337/api/doc', state.currentDoc)
+    let newDoc = {
+      ...state.currentDoc,
+      content: btoa(state.currentDoc.content),
+    };
+
+    post('http://localhost:1337/api/doc', newDoc)
       .then(actions.refreshDocs())
       .catch(console.log);
   },
@@ -87,7 +92,6 @@ function view(state, actions) {
 
 app(state, actions, view, document.body);
 
-
 // define functions outside of view so we don't redeclare them every time
 function handleSetTitle(actions) {
   return function(event) {
@@ -114,13 +118,6 @@ function submitDoc() {
   }
 }
 
-// action format
-function action(value) {
-  return function(state) {
-
-  }
-}
-
 function post(url = ``, data = {}) {
   // Default options are marked with *
     return fetch(url, {
@@ -130,5 +127,9 @@ function post(url = ``, data = {}) {
         },
         body: JSON.stringify(data),
     })
-    .then(response => response.json());
+    .then(res => {
+      if (res.status === 200) {
+        return res.json();
+      }
+    });
 }

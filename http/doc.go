@@ -44,6 +44,7 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.log.WithField("doc", doc).Info("creating document")
 	if err := h.docStore.PutDoc(r.Context(), doc); err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while saving document")
