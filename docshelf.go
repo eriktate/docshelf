@@ -31,7 +31,7 @@ type Doc struct {
 	Path      string    `json:"path"`
 	Title     string    `json:"title"`
 	IsDir     bool      `json:"isDir"`
-	Content   []byte    `json:"content,omitempty"`
+	Content   string    `json:"content,omitempty"`
 	Policy    *Policy   `json:"policy"`
 	Tags      []string  `json:"tags"`
 	CreatedBy string    `json:"createdBy"`

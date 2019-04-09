@@ -144,8 +144,8 @@ func (h DocHandler) RenderDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dom := blackfriday.Run(doc.Content)
-	doc.Content = dom
+	dom := blackfriday.Run([]byte(doc.Content))
+	doc.Content = string(dom)
 
 	// TODO (erik): Need to embed this template in the binary rather than reading off of
 	// the file system.
