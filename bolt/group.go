@@ -21,13 +21,10 @@ func (s Store) GetGroup(ctx context.Context, id string) (docshelf.Group, error) 
 	return group, nil
 }
 
-// PutGroup creates a new docshelf User or updates an existing one in boltdb.
+// PutGroup creates a new docshelf Group or updates an existing one in boltdb.
 func (s Store) PutGroup(ctx context.Context, group docshelf.Group) (string, error) {
 	if group.ID == "" {
 		group.ID = xid.New().String()
-	}
-
-	if group.CreatedAt.IsZero() {
 		group.CreatedAt = time.Now()
 	}
 
@@ -40,7 +37,7 @@ func (s Store) PutGroup(ctx context.Context, group docshelf.Group) (string, erro
 	return group.ID, nil
 }
 
-// RemoveGroup marks a user as deleted in boltdb.
+// RemoveGroup deletes a docshelf Group from boltdb.
 func (s Store) RemoveGroup(ctx context.Context, id string) error {
 	return errors.Wrap(s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(userBucket)

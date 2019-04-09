@@ -34,7 +34,7 @@ func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	return doc, nil
 }
 
-// ListDocs fetches a slice of docshelf Document metadata from bolt that fit the given prefix or
+// ListDocs fetches a slice of docshelf Document metadata from bolt that fit the given prefix and
 // tags supplied.
 func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]docshelf.Doc, error) {
 	var docs []docshelf.Doc
@@ -52,7 +52,7 @@ func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]d
 				return nil
 			}
 
-			listing := make([]docshelf.Doc, 0, len(docs))
+			listing := make([]docshelf.Doc, 0, len(tagged))
 			for _, doc := range tagged {
 				if strings.HasPrefix(doc.Path, prefix) {
 					listing = append(listing, doc)

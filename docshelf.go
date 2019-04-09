@@ -95,6 +95,12 @@ type FileStore interface {
 	ListDir(path string) ([]string, error)
 }
 
+// An Indexer knows how to index and search docshelf documents.
+type Indexer interface {
+	Index(ctx context.Context, doc Doc) error
+	Search(ctx context.Context, term string) ([]string, error)
+}
+
 // ContentString returns a Doc's content as a string.
 func (d Doc) ContentString() string {
 	return string(d.Content)
