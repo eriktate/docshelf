@@ -169,7 +169,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	doc := docshelf.Doc{
 		Path:      "test.md",
 		Title:     "Test Document",
-		Content:   []byte("This is a test document, for testing purposes only"),
+		Content:   "This is a test document, for testing purposes only",
 		CreatedBy: xid.New().String(),
 		UpdatedBy: xid.New().String(),
 	}
@@ -214,7 +214,7 @@ func Test_ListDocs(t *testing.T) {
 	doc1 := docshelf.Doc{
 		Path:      "test1.md",
 		Title:     "Test Document 1",
-		Content:   []byte("This is a test document, for testing purposes only"),
+		Content:   "This is a test document, for testing purposes only",
 		CreatedBy: xid.New().String(),
 		UpdatedBy: xid.New().String(),
 	}
@@ -222,7 +222,7 @@ func Test_ListDocs(t *testing.T) {
 	doc2 := docshelf.Doc{
 		Path:      "test2.md",
 		Title:     "Test Document 2",
-		Content:   []byte("This is a test document, for testing purposes only"),
+		Content:   "This is a test document, for testing purposes only",
 		CreatedBy: xid.New().String(),
 		UpdatedBy: xid.New().String(),
 	}
@@ -263,7 +263,7 @@ func Test_TagLifecycle(t *testing.T) {
 	doc1 := docshelf.Doc{
 		Path:      "test1.md",
 		Title:     "Test Document 1",
-		Content:   []byte("This is a test document, for testing purposes only"),
+		Content:   "This is a test document, for testing purposes only",
 		CreatedBy: xid.New().String(),
 		UpdatedBy: xid.New().String(),
 	}
@@ -271,7 +271,7 @@ func Test_TagLifecycle(t *testing.T) {
 	doc2 := docshelf.Doc{
 		Path:      "test2.md",
 		Title:     "Test Document 2",
-		Content:   []byte("This is a test document, for testing purposes only"),
+		Content:   "This is a test document, for testing purposes only",
 		CreatedBy: xid.New().String(),
 		UpdatedBy: xid.New().String(),
 	}

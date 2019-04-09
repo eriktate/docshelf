@@ -28,12 +28,12 @@ func Test_IndexSearch(t *testing.T) {
 
 	doc1 := docshelf.Doc{
 		Path:    "testPath1",
-		Content: []byte("This is a test document about unicorns"),
+		Content: "This is a test document about unicorns",
 	}
 
 	doc2 := docshelf.Doc{
 		Path:    "testPath2",
-		Content: []byte("This is a test document about gophers"),
+		Content: "This is a test document about gophers",
 	}
 
 	// RUN
