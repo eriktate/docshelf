@@ -30,7 +30,7 @@ func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 		return doc, errors.Wrap(err, "failed to read file from file store")
 	}
 
-	doc.Content = content
+	doc.Content = string(content)
 	return doc, nil
 }
 
@@ -130,11 +130,11 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 
 	doc.UpdatedAt = time.Now()
 
-	if err := s.fs.WriteFile(doc.Path, doc.Content); err != nil {
+	if err := s.fs.WriteFile(doc.Path, []byte(doc.Content)); err != nil {
 		return errors.Wrap(err, "failed to write doc to file store")
 	}
 
-	doc.Content = nil // need to clear content before storing doc
+	doc.Content = "" // need to clear content before storing doc
 	if err := s.putItem(ctx, docBucket, doc.Path, doc); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc fails
 			return errors.Wrap(err, "failed to put cleanup file after bolt failure")
