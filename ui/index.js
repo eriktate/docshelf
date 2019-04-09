@@ -26,10 +26,10 @@ const actions = {
 
     return newState;
   },
-  setPath: value => state => ({
+  setPath: path => state => ({
     currentDoc: {
       ...state.currentDoc,
-      path: value,
+      path: path,
     }
   }),
   setContent: content => (state, actions) => {
@@ -50,12 +50,7 @@ const actions = {
       .then(actions.setDocs);
   },
   submitDoc: value => (state, actions) => {
-    let newDoc = {
-      ...state.currentDoc,
-      content: btoa(state.currentDoc.content),
-    };
-
-    post('http://localhost:1337/api/doc', newDoc)
+    return post('http://localhost:1337/api/doc', state.currentDoc)
       .then(actions.refreshDocs())
       .catch(console.log);
   },
@@ -105,7 +100,7 @@ function handleSetPath(actions) {
   }
 }
 
-function handleSetContent(event) {
+function handleSetContent(actions) {
   return function(event) {
     return actions.setContent(event.target.value);
   }
