@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/eriktate/docshelf"
+	"github.com/docshelf/docshelf"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 )

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/eriktate/docshelf"
+	"github.com/docshelf/docshelf"
 	"github.com/go-chi/chi"
 	"github.com/russross/blackfriday"
 	"github.com/sirupsen/logrus"

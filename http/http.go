@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/eriktate/docshelf"
+	"github.com/docshelf/docshelf"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	log "github.com/sirupsen/logrus"
