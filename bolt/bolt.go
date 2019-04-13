@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/boltdb/bolt"
-	"github.com/eriktate/docshelf"
+	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
 )
 

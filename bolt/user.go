@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/eriktate/docshelf"
+	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 )

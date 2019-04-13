@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/eriktate/docshelf"
+	"github.com/docshelf/docshelf"
 
 	"testing"
 )

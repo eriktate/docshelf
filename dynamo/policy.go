@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dyna "github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbattribute"
-	"github.com/eriktate/docshelf"
+	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 )
