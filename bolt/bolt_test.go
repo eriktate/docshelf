@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/eriktate/docshelf"
-	"github.com/eriktate/docshelf/mock"
+	"github.com/docshelf/docshelf"
+	"github.com/docshelf/docshelf/mock"
 	"github.com/rs/xid"
 )
 

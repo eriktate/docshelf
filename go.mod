@@ -1,4 +1,4 @@
-module github.com/eriktate/docshelf
+module github.com/docshelf/docshelf
 
 require (
 	github.com/RoaringBitmap/roaring v0.4.17 // indirect

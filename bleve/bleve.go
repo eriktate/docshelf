@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/blevesearch/bleve"
-	"github.com/eriktate/docshelf"
-	"github.com/eriktate/docshelf/env"
+	"github.com/docshelf/docshelf"
+	"github.com/docshelf/docshelf/env"
 )
 
 const defIndexPath = "docshelf.bleve"

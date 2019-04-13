@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dyna "github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbiface"
-	"github.com/eriktate/docshelf"
-	"github.com/eriktate/docshelf/env"
+	"github.com/docshelf/docshelf"
+	"github.com/docshelf/docshelf/env"
 )
 
 const (

@@ -5,9 +5,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/eriktate/docshelf/bolt"
-	"github.com/eriktate/docshelf/disk"
-	"github.com/eriktate/docshelf/http"
+	"github.com/docshelf/docshelf/bolt"
+	"github.com/docshelf/docshelf/disk"
+	"github.com/docshelf/docshelf/http"
 	"github.com/sirupsen/logrus"
 )
 
