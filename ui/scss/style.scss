@@ -11,6 +11,12 @@ $font-size: 16px;
 $topnav-height: 3rem;
 $aside-width: 30rem;
 
+$hamburger-layer-color: #ffffff;
+$hamburger-types: (arrow);
+$hamburger-layer-padding-x: 0px;
+$hamburger-layer-padding-y: 0px;
+@import "../node_modules/hamburgers/_sass/hamburgers/hamburgers.scss";
+
 %panel {
 	background-color: $panel-background;
 	border-radius: 2px;
@@ -34,6 +40,8 @@ input {
 	border-width: 1px;
 	border-color: $border-color;
 	height: 1.5rem;
+	padding: 0.5rem;
+	width: 100%;
 }
 
 textarea {

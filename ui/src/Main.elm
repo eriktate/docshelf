@@ -207,8 +207,8 @@ setContent content doc =
 view : Model -> Html Msg
 view model =
     div []
-        [ navBar
-        , showMenu model.docs model.menuStatus
+        [ navBar model.menuStatus
+        , menu model.docs model.menuStatus
         , main_ []
             [ docForm model.current
             , previewDoc model.current
@@ -219,7 +219,8 @@ view model =
 docForm : Doc -> Html Msg
 docForm doc =
     Html.form [ class "edit" ]
-        [ fieldset []
+        [ h1 [] [ text "Edit" ]
+        , fieldset []
             [ legend [] [ text "Title" ]
             , input [ onInput SetTitle, value doc.title ] []
             ]
@@ -236,11 +237,31 @@ docForm doc =
         ]
 
 
-navBar : Html Msg
-navBar =
+navBar : MenuStatus -> Html Msg
+navBar status =
     nav []
-        [ button [ onClick ToggleMenu ] [ text "Open menu" ]
+        [ hamburger status
         , h2 [] [ text "Doc Shelf" ]
+        ]
+
+
+hamburger : MenuStatus -> Html Msg
+hamburger status =
+    let
+        isActive =
+            case status of
+                Opened ->
+                    "is-active"
+
+                Closed ->
+                    ""
+
+                Unused ->
+                    ""
+    in
+    button [ onClick ToggleMenu, class "hamburger", class "hamburger--arrow", class isActive ]
+        [ span [ class "hamburger-box" ]
+            [ span [ class "hamburger-inner" ] [] ]
         ]
 
 
@@ -252,8 +273,8 @@ previewDoc doc =
         ]
 
 
-showMenu : List Doc -> MenuStatus -> Html Msg
-showMenu docs status =
+menu : List Doc -> MenuStatus -> Html Msg
+menu docs status =
     let
         statusClass =
             case status of
