@@ -7,7 +7,17 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode exposing (Decoder, bool, field, list, map2, map4, maybe, oneOf, string)
 import Json.Encode as Encode
+import Markdown
 import String exposing (join, split, toLower)
+
+
+main =
+    element
+        { init = init
+        , update = update
+        , subscriptions = subscriptions
+        , view = view
+        }
 
 
 type alias Doc =
@@ -24,14 +34,21 @@ type alias SuccessResponse =
     }
 
 
+type MenuStatus
+    = Opened
+    | Closed
+    | Unused
+
+
 type alias Model =
     { docs : List Doc
     , current : Doc
+    , menuStatus : MenuStatus
     }
 
 
 type Msg
-    = Noop
+    = ResetDoc
     | FetchDocs (Result Http.Error (List Doc))
     | FetchDoc (Result Http.Error Doc)
     | SetTitle String
@@ -39,6 +56,7 @@ type Msg
     | SelectDoc String
     | SubmitDoc
     | HandleResult (Result Http.Error ())
+    | ToggleMenu
 
 
 newDoc : Doc
@@ -54,6 +72,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { docs = []
       , current = newDoc
+      , menuStatus = Unused
       }
     , fetchDocs
     )
@@ -83,8 +102,8 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Noop ->
-            ( model, Cmd.none )
+        ResetDoc ->
+            ( { model | current = newDoc }, Cmd.none )
 
         FetchDocs result ->
             case result of
@@ -142,6 +161,21 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
+        ToggleMenu ->
+            let
+                newStatus =
+                    case model.menuStatus of
+                        Opened ->
+                            Closed
+
+                        Closed ->
+                            Opened
+
+                        Unused ->
+                            Opened
+            in
+            ( { model | menuStatus = newStatus }, Cmd.none )
+
 
 findDoc : List Doc -> String -> Doc
 findDoc docs path =
@@ -174,9 +208,9 @@ view : Model -> Html Msg
 view model =
     div []
         [ navBar
+        , showMenu model.docs model.menuStatus
         , main_ []
-            [ aside [] [ showDocs model.docs ]
-            , docForm model.current
+            [ docForm model.current
             , previewDoc model.current
             ]
         ]
@@ -198,26 +232,42 @@ docForm doc =
             , textarea [ onInput SetContent, value doc.content ] []
             ]
         , button [ type_ "button", onClick SubmitDoc ] [ text "Create Doc" ]
+        , button [ type_ "button", onClick ResetDoc ] [ text "Reset Form" ]
         ]
 
 
 navBar : Html Msg
 navBar =
     nav []
-        [ h2 [] [ text "Doc Shelf" ] ]
+        [ button [ onClick ToggleMenu ] [ text "Open menu" ]
+        , h2 [] [ text "Doc Shelf" ]
+        ]
 
 
 previewDoc : Doc -> Html Msg
 previewDoc doc =
     article []
-        [ h1 [] [ text <| "Preview: " ++ doc.title ]
-        , p [] [ text doc.content ]
+        [ h1 [] [ text <| "Quick Preview: " ++ doc.title ]
+        , Markdown.toHtml [] doc.content
         ]
 
 
-showDocs : List Doc -> Html Msg
-showDocs docs =
-    ul [] (List.map (\d -> li [] [ a [ href "#", onClick (SelectDoc d.path) ] [ text d.title ] ]) docs)
+showMenu : List Doc -> MenuStatus -> Html Msg
+showMenu docs status =
+    let
+        statusClass =
+            case status of
+                Opened ->
+                    "slide-in"
+
+                Closed ->
+                    "slide-away"
+
+                Unused ->
+                    ""
+    in
+    aside [ class statusClass ]
+        [ ul [] (List.map (\d -> li [] [ a [ href "#", onClick (SelectDoc d.path) ] [ text d.title ] ]) docs) ]
 
 
 optionalField : String -> Decoder a -> a -> Decoder a
@@ -253,12 +303,3 @@ encodeDoc doc =
         , ( "title", Encode.string doc.title )
         , ( "content", Encode.string doc.content )
         ]
-
-
-main =
-    element
-        { init = init
-        , update = update
-        , subscriptions = subscriptions
-        , view = view
-        }
