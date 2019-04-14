@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+@import './minireset.min.css';
+
+$primary-color: #000000;
+$secondary-text-color: #ffffff;
+$primary-background: #ffffff;
+$secondary-background: #eeeeee;
+
+fieldset {
+	border: none;
+}
+
+html {
+	color: #555555;
+	background-color: $primary-background;
+	font-family: "Quicksand", sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	min-height: 100vh;
+	min-width: 300px;
+	overflow-x: hidden;
+	text-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+nav {
+	display: flex;
+	background-color: $primary-color;
+	color: $secondary-text-color;
+	height: 3rem;
+	line-height: 3rem;
+	padding-left: 2rem;
+	padding-right: 2rem;
+}
+
+main {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	justify-content: space-between;
+}
+
+aside {
+	border-right: thin;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	max-width: 15em;
+	min-width: 10em;
+
+	li {
+		height: 2rem;
+		line-height: 2rem;
+		text-align: center;
+	}
+
+	li:hover {
+		background-color: $secondary-background;
+	}
+
+	a {
+		width: 100%;
+		height: 100%;
+	}
+}
+
+a {
+	text-decoration: none;
+	color: $primary-color;
+}
+
+article {
+	flex: 2;
+	margin: 1rem;
+
+	p {
+		margin-left: 1rem;
+	}
+}
+
+h1 {
+	font-size: 2rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+}
+
+.edit {
+	margin: 1rem;
+	min-width: 20rem;
+}
+

@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser exposing (element)
-import Html exposing (Html, a, button, div, fieldset, input, label, li, p, text, textarea, ul)
+import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
@@ -173,37 +173,45 @@ setContent content doc =
 view : Model -> Html Msg
 view model =
     div []
-        [ showDocs model.docs
-        , docForm model.current
-        , previewDoc model.current
+        [ navBar
+        , main_ []
+            [ aside [] [ showDocs model.docs ]
+            , docForm model.current
+            , previewDoc model.current
+            ]
         ]
 
 
 docForm : Doc -> Html Msg
 docForm doc =
-    Html.form []
+    Html.form [ class "edit" ]
         [ fieldset []
-            [ label [] [ text "Title" ]
+            [ legend [] [ text "Title" ]
             , input [ onInput SetTitle, value doc.title ] []
             ]
         , fieldset []
-            [ label [] [ text "Path" ]
+            [ legend [] [ text "Path" ]
             , p [] [ text doc.path ]
             ]
         , fieldset []
-            [ label [] [ text "Content" ]
+            [ legend [] [ text "Content" ]
             , textarea [ onInput SetContent, value doc.content ] []
             ]
         , button [ type_ "button", onClick SubmitDoc ] [ text "Create Doc" ]
         ]
 
 
+navBar : Html Msg
+navBar =
+    nav []
+        [ h2 [] [ text "Doc Shelf" ] ]
+
+
 previewDoc : Doc -> Html Msg
 previewDoc doc =
-    ul []
-        [ li [] [ text <| "Title: " ++ doc.title ]
-        , li [] [ text <| "Path: " ++ doc.path ]
-        , li [] [ text <| "Content: " ++ doc.content ]
+    article []
+        [ h1 [] [ text <| "Preview: " ++ doc.title ]
+        , p [] [ text doc.content ]
         ]
 
 
