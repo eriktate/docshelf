@@ -232,8 +232,10 @@ docForm doc =
             [ legend [] [ text "Content" ]
             , textarea [ onInput SetContent, value doc.content ] []
             ]
-        , button [ type_ "button", onClick SubmitDoc ] [ text "Create Doc" ]
-        , button [ type_ "button", onClick ResetDoc ] [ text "Reset Form" ]
+        , div [ class "button-list" ]
+            [ button [ type_ "button", onClick SubmitDoc, class "button", class "primary-button" ] [ text "Create Doc" ]
+            , button [ type_ "button", onClick ResetDoc, class "button" ] [ text "Reset Form" ]
+            ]
         ]
 
 
@@ -259,7 +261,7 @@ hamburger status =
                 Unused ->
                     ""
     in
-    button [ onClick ToggleMenu, class "hamburger", class "hamburger--arrow", class isActive ]
+    button [ onClick ToggleMenu, class "hamburger", class "hamburger--arrow", class "menu-button", class isActive ]
         [ span [ class "hamburger-box" ]
             [ span [ class "hamburger-inner" ] [] ]
         ]

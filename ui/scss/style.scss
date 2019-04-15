@@ -2,6 +2,7 @@
 @import './minireset.min.css';
 
 $primary-color: #000000;
+$primary-text-color: #555555;
 $secondary-text-color: #ffffff;
 $panel-background: #ffffff;
 $primary-background: #eeeeee;
@@ -13,8 +14,6 @@ $aside-width: 30rem;
 
 $hamburger-layer-color: #ffffff;
 $hamburger-types: (arrow);
-$hamburger-layer-padding-x: 0px;
-$hamburger-layer-padding-y: 0px;
 @import "../node_modules/hamburgers/_sass/hamburgers/hamburgers.scss";
 
 %panel {
@@ -57,7 +56,7 @@ textarea {
 }
 
 html {
-	color: #555555;
+	color: $primary-text-color;
 	background-color: $primary-background;
 	font-family: "Quicksand", sans-serif;
 	font-size: 16px;
@@ -79,8 +78,7 @@ nav {
 	color: $secondary-text-color;
 	height: $topnav-height;
 	line-height: $topnav-height;
-	padding-left: 2rem;
-	padding-right: 2rem;
+	padding-right: 1rem;
 }
 
 main {
@@ -164,6 +162,34 @@ code, pre {
 	height: 100%;
 	margin: 1rem;
 	min-width: 20rem;
+}
+
+.hamburger {
+	transform: scale(0.5);
+}
+
+.button {
+	display: block;
+	background-color: $secondary-text-color;
+	border-radius: 3px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: $border-color;
+	box-shadow: 0px 2px 3px $border-color;
+	padding: 0.5rem;
+}
+
+.primary-button {
+	background-color: $primary-color;
+	border-color: $primary-color;
+	color: $secondary-text-color;
+}
+
+.button-list {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	justify-content: space-between;
 }
 
 @keyframes slidein {
