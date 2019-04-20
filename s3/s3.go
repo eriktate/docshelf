@@ -53,6 +53,7 @@ func (s Store) ReadFile(path string) ([]byte, error) {
 
 	res, err := s.client.GetObjectRequest(&input).Send()
 	if err != nil {
+		// TODO (erik): This err check is super fragile. Need to make this better.
 		if strings.Contains(err.Error(), "NoSuchKey") {
 			return nil, docshelf.NewErrDoesNotExist(fmt.Sprintf("could not find %s/%s/%s", s.bucket, s.root, path))
 		}
