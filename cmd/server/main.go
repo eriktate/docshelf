@@ -62,7 +62,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server.UserHandler = http.NewUserHandler(backend, log)
+	server.UserStore = backend
 	server.DocHandler = http.NewDocHandler(backend, log)
 	server.Auth = http.NewBasicAuth(backend)
 

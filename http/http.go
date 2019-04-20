@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,7 +20,7 @@ type Server struct {
 	log  *logrus.Logger
 
 	DocHandler  DocHandler
-	UserHandler UserHandler
+	UserStore   docshelf.UserStore
 	GroupStore  docshelf.GroupStore
 	PolicyStore docshelf.PolicyStore
 	Auth        docshelf.Authenticator
@@ -50,6 +51,10 @@ func (s Server) Start() error {
 
 // CheckHandlers returns an error if the Server contains any invalid handlers.
 func (s Server) CheckHandlers() error {
+	if s.UserStore == nil {
+		return errors.New("no UserStore set")
+	}
+
 	if s.GroupStore == nil {
 		return errors.New("no GroupStore set")
 	}
@@ -76,13 +81,15 @@ func (s Server) buildRoutes() chi.Router {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	})
 
+	userHandler := NewUserHandler(s.UserStore, s.log)
 	mux.Use(cors.Handler)
 	mux.Route("/api", func(r chi.Router) {
+		r.Use(Authentication(s.UserStore))
 		r.Route("/user", func(r chi.Router) {
-			r.Get("/", s.UserHandler.GetUsers)
-			r.Post("/", s.UserHandler.PostUser)
-			r.Get("/{id}", s.UserHandler.GetUser)
-			r.Delete("/{id}", s.UserHandler.DeleteUser)
+			r.Get("/", userHandler.GetUsers)
+			r.Post("/", userHandler.PostUser)
+			r.Get("/{id}", userHandler.GetUser)
+			r.Delete("/{id}", userHandler.DeleteUser)
 		})
 
 		r.Route("/doc", func(r chi.Router) {
@@ -102,19 +109,48 @@ func (s Server) buildRoutes() chi.Router {
 }
 
 func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
-	var user docshelf.User
+	var login docshelf.User
 
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&login); err != nil {
 		s.log.Error(err)
 		badRequest(w, "invalid authentication data")
 		return
 	}
 
-	if err := s.Auth.Authenticate(r.Context(), user.Email, user.Token); err != nil {
+	if err := s.Auth.Authenticate(r.Context(), login.Email, login.Token); err != nil {
 		s.log.Error(err)
 		unauthorized(w, "invalid credentials")
 		return
 	}
 
+	user, err := s.UserStore.GetUser(r.Context(), login.Email)
+	if err != nil {
+		s.log.Error(err)
+		serverError(w, "something went wrong while verifying credentials")
+		return
+	}
+
+	// TODO (erik): Need to sign this data and add an expiration.
+	// Also may need to expand the data stored and remove the HttpOnly.
+	identity := http.Cookie{
+		Name:     "session",
+		Value:    user.ID,
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, &identity)
 	noContent(w)
+}
+
+// everything down here is setup for attaching certain data to the request context.
+type contextKey string
+
+const userKey = contextKey("ds-user")
+
+func getContextUser(ctx context.Context) (docshelf.User, error) {
+	if user, ok := ctx.Value(userKey).(docshelf.User); ok {
+		return user, nil
+	}
+
+	return docshelf.User{}, errors.New("no user found in context")
 }
