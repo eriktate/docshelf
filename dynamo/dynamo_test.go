@@ -161,7 +161,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(mock.NewFileStore(), nil, nil)
+	store, err := New(mock.NewFileStore(), mock.NewTextIndex(nil), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -256,7 +256,7 @@ func Test_TagLifecycle(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(mock.NewFileStore(), nil, nil)
+	store, err := New(mock.NewFileStore(), mock.NewTextIndex(nil), nil)
 	if err != nil {
 		t.Fatal(err)
 	}

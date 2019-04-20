@@ -133,8 +133,14 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 
 	doc.UpdatedAt = time.Now()
 
+	// save content
 	if err := s.fs.WriteFile(doc.Path, []byte(doc.Content)); err != nil {
 		return errors.Wrap(err, "failed to write doc to file store")
+	}
+
+	// full text index
+	if err := s.ti.Index(ctx, doc); err != nil {
+		return errors.Wrap(err, "failed to text index doc")
 	}
 
 	doc.Content = "" // need to clear content before storing doc
@@ -149,6 +155,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 		Item:      marshaled,
 	}
 
+	// save metadata
 	if _, err := s.client.PutItemRequest(&input).Send(); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc failes
 			return errors.Wrapf(err, "cleanup failed for file: %s", doc.Path)

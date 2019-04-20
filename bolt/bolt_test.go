@@ -249,7 +249,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	ctx := context.Background()
 	defer os.Remove(dbName) // cleanup database after test
 
-	store, err := New(dbName, mock.NewFileStore(), nil)
+	store, err := New(dbName, mock.NewFileStore(), mock.NewTextIndex(nil))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -339,7 +339,7 @@ func Test_TagLifecycle(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(dbName, mock.NewFileStore(), nil)
+	store, err := New(dbName, mock.NewFileStore(), mock.NewTextIndex(nil))
 	if err != nil {
 		t.Fatal(err)
 	}
