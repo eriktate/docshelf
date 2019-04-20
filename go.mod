@@ -11,6 +11,7 @@ require (
 	github.com/couchbase/vellum v0.0.0-20190328134517-462e86d8716b // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/go-chi/cors v1.0.0
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v1.2.1
 	github.com/russross/blackfriday v2.0.0+incompatible

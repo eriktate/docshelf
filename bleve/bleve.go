@@ -45,11 +45,16 @@ func New() (Index, error) {
 
 // Index takes a docshelf Doc and indexes it in bleve.
 func (i Index) Index(ctx context.Context, doc docshelf.Doc) error {
-	return i.idx.Index(doc.Path, doc.ContentString())
+	return i.idx.Index(doc.Path, doc)
 }
 
 // Search takes a search term and returns all doc paths that match.
 func (i Index) Search(ctx context.Context, query string) ([]string, error) {
+	// don't waste time searching for blanks.
+	if query == "" {
+		return nil, nil
+	}
+
 	req := bleve.NewSearchRequest(bleve.NewFuzzyQuery(query))
 	res, err := i.idx.Search(req)
 	if err != nil {
