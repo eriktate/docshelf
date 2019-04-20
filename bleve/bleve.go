@@ -2,6 +2,8 @@ package bleve
 
 import (
 	"context"
+	"errors"
+	"os"
 
 	"github.com/blevesearch/bleve"
 	"github.com/docshelf/docshelf"
@@ -10,15 +12,35 @@ import (
 
 const defIndexPath = "docshelf.bleve"
 
-// An Index implements the docshelf.Indexer interface.
+// An Index implements the docshelf.TextIndex interface.
 type Index struct {
 	idx bleve.Index
 }
 
 // New returns a new bleve Index.
 func New() (Index, error) {
-	mapping := bleve.NewIndexMapping()
-	idx, err := bleve.New(env.GetEnvString("DS_INDEX_PATH", defIndexPath), mapping)
+	path := env.GetEnvString("DS_INDEX_PATH", defIndexPath)
+	stat, err := os.Stat(path)
+	if err != nil {
+		if err == os.ErrNotExist {
+			mapping := bleve.NewIndexMapping()
+			idx, err := bleve.New(env.GetEnvString("DS_INDEX_PATH", defIndexPath), mapping)
+			if err != nil {
+				return Index{}, err
+			}
+
+			return Index{idx}, nil
+
+		}
+
+		return Index{}, err
+	}
+
+	if !stat.IsDir() {
+		return Index{}, errors.New("bleve index path exists, but isn't a folder")
+	}
+
+	idx, err := bleve.Open(path)
 	if err != nil {
 		return Index{}, err
 	}

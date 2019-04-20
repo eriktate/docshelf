@@ -55,13 +55,13 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 
 // GetList handles requests for listing Docs by path prefix.
 func (h DocHandler) GetList(w http.ResponseWriter, r *http.Request) {
-	prefix := chi.URLParam(r, "prefix")
+	query := r.URL.Query().Get("query")
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
 	if len(tags) == 1 && tags[0] == "" {
 		tags = nil
 	}
-	h.log.WithField("tags", tags).WithField("prefix", prefix).Info("Getting list")
-	docs, err := h.docStore.ListDocs(r.Context(), prefix, tags...)
+
+	docs, err := h.docStore.ListDocs(r.Context(), query, tags...)
 	if err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while listing documents")

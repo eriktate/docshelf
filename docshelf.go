@@ -103,8 +103,8 @@ type FileStore interface {
 	ListDir(path string) ([]string, error)
 }
 
-// An Indexer knows how to index and search docshelf documents.
-type Indexer interface {
+// An TextIndex knows how to index and search docshelf documents.
+type TextIndex interface {
 	Index(ctx context.Context, doc Doc) error
 	Search(ctx context.Context, term string) ([]string, error)
 }
