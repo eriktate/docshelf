@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strconv"
 
@@ -11,8 +10,11 @@ import (
 	"github.com/docshelf/docshelf/dynamo"
 	"github.com/docshelf/docshelf/http"
 	"github.com/docshelf/docshelf/s3"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
+
+var log *logrus.Logger
 
 // A Config contains all of the values docshelf might need to start up.
 type Config struct {
@@ -25,7 +27,7 @@ type Config struct {
 	Port        uint
 }
 
-func fromEnv() Config {
+func configFromEnv() Config {
 	return Config{
 		Backend:     getEnvString("DS_BACKEND", "bolt"),
 		FileBackend: getEnvString("DS_FILE_BACKEND", "disk"),
@@ -38,9 +40,9 @@ func fromEnv() Config {
 }
 
 func main() {
-	logger := logrus.New()
-	cfg := fromEnv()
-	server := http.NewServer(cfg.Host, cfg.Port)
+	log = logrus.New()
+	cfg := configFromEnv()
+	server := http.NewServer(cfg.Host, cfg.Port, log)
 
 	fs, err := getFileStore(cfg)
 	if err != nil {
@@ -52,8 +54,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server.UserHandler = http.NewUserHandler(backend, logger)
-	server.DocHandler = http.NewDocHandler(backend, logger)
+	server.UserHandler = http.NewUserHandler(backend, log)
+	server.DocHandler = http.NewDocHandler(backend, log)
 
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
@@ -65,14 +67,14 @@ func getFileStore(cfg Config) (docshelf.FileStore, error) {
 	case "s3":
 		fs, err := s3.New(cfg.S3Bucket, cfg.FilePrefix)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to create s3 file store")
 		}
 
 		return fs, nil
 	default:
 		fs, err := disk.New(cfg.FilePrefix)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to create disk file store")
 		}
 
 		return fs, nil
@@ -80,18 +82,21 @@ func getFileStore(cfg Config) (docshelf.FileStore, error) {
 }
 
 func getBackend(cfg Config, fs docshelf.FileStore) (docshelf.Backend, error) {
+	logrus.WithField("backend", cfg.Backend).Info("doc backend")
 	switch cfg.Backend {
 	case "dynamo":
-		backend, err := dynamo.New(fs)
+		log.Info("initializing dynamo backend")
+		backend, err := dynamo.New(fs, log)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to create dynamo backend")
 		}
 
 		return backend, nil
 	default:
+		log.Info("initializing bolt backend")
 		backend, err := bolt.New(cfg.BoltPath, fs)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to create bolt backend")
 		}
 
 		return backend, nil

@@ -7,38 +7,39 @@ import (
 
 	"github.com/docshelf/docshelf"
 	"github.com/go-chi/chi"
-	"github.com/go-chi/cors"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // A Server is a collection of stores that get wired up to HTTP endpoint.
 type Server struct {
+	host string
+	port uint
+	log  *logrus.Logger
+
 	DocHandler  DocHandler
 	UserHandler UserHandler
 	GroupStore  docshelf.GroupStore
 	PolicyStore docshelf.PolicyStore
 	Auth        docshelf.Authenticator
-
-	addr string
-	port uint
 }
 
 // NewServer returns a new Server struct.
-func NewServer(addr string, port uint) Server {
+func NewServer(host string, port uint, logger *logrus.Logger) Server {
 	return Server{
-		addr: addr,
+		host: host,
 		port: port,
+		log:  logger,
 	}
 }
 
 // Start fires up an HTTP server and listens for incoming requests.
 func (s Server) Start() error {
-	log.Info("Starting doc server...")
+	s.log.WithField("host", s.host).WithField("port", s.port).Info("server starting")
 	// if err := s.CheckStores(); err != nil {
 	// 	return err
 	// }
 
-	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.addr, s.port), s.buildRoutes()); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.host, s.port), s.buildRoutes()); err != nil {
 		return err
 	}
 
@@ -64,17 +65,6 @@ func (s Server) CheckHandlers() error {
 
 func (s Server) buildRoutes() chi.Router {
 	mux := chi.NewRouter()
-
-	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	})
-
-	mux.Use(cors.Handler)
 	mux.Route("/api", func(r chi.Router) {
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/", s.UserHandler.GetUsers)
