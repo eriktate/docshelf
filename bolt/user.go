@@ -10,6 +10,7 @@ import (
 	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
+	"github.com/sirupsen/logrus"
 )
 
 // GetUser fetches an existing docshelf User from boltdb.
@@ -18,11 +19,13 @@ func (s Store) GetUser(ctx context.Context, id string) (docshelf.User, error) {
 
 	if err := s.db.View(func(tx *bolt.Tx) error {
 		if isEmail(id) {
+			logrus.Warn("id is an email")
 			var userID string
 			if err := s.getItem(ctx, tx, userEmailBucket, id, &userID); err != nil {
 				return err
 			}
 
+			logrus.WithField("id", userID).Warn("fetched ID")
 			id = userID
 		}
 
@@ -93,7 +96,7 @@ func (s Store) PutUser(ctx context.Context, user docshelf.User) (string, error) 
 			return errors.Wrap(err, "failed to put user into bolt")
 		}
 
-		if err := s.putItem(ctx, tx, userEmailBucket, user.ID, user.ID); err != nil {
+		if err := s.putItem(ctx, tx, userEmailBucket, user.Email, user.ID); err != nil {
 			return errors.Wrap(err, "failed to save secondary email index")
 		}
 

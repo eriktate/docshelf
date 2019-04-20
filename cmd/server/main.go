@@ -64,6 +64,7 @@ func main() {
 
 	server.UserHandler = http.NewUserHandler(backend, log)
 	server.DocHandler = http.NewDocHandler(backend, log)
+	server.Auth = http.NewBasicAuth(backend)
 
 	if err := server.Start(); err != nil {
 		log.Fatal(err)

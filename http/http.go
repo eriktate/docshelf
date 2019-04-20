@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -95,6 +96,25 @@ func (s Server) buildRoutes() chi.Router {
 	})
 
 	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
+	mux.Post("/login", s.handleLogin)
 
 	return mux
+}
+
+func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
+	var user docshelf.User
+
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		s.log.Error(err)
+		badRequest(w, "invalid authentication data")
+		return
+	}
+
+	if err := s.Auth.Authenticate(r.Context(), user.Email, user.Token); err != nil {
+		s.log.Error(err)
+		unauthorized(w, "invalid credentials")
+		return
+	}
+
+	noContent(w)
 }

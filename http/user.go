@@ -59,6 +59,7 @@ func (h UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 
 	// TODO (erik): Adjust the cost parameter once we can benchmark the time spent hashing the password.
 	hashed, err := bcrypt.GenerateFromPassword([]byte(user.Token), 12)
+
 	if err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while saving user information")
