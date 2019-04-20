@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/docshelf/docshelf"
+	"github.com/docshelf/docshelf/bleve"
 	"github.com/docshelf/docshelf/bolt"
 	"github.com/docshelf/docshelf/disk"
 	"github.com/docshelf/docshelf/dynamo"
@@ -20,6 +21,7 @@ var log *logrus.Logger
 type Config struct {
 	Backend     string
 	FileBackend string
+	TextIndex   string
 	S3Bucket    string
 	FilePrefix  string
 	BoltPath    string
@@ -31,6 +33,7 @@ func configFromEnv() Config {
 	return Config{
 		Backend:     getEnvString("DS_BACKEND", "bolt"),
 		FileBackend: getEnvString("DS_FILE_BACKEND", "disk"),
+		TextIndex:   getEnvString("DS_TEXT_INDEX", "bleve"),
 		S3Bucket:    getEnvString("DS_S3_BUCKET", ""),
 		FilePrefix:  getEnvString("DS_FILE_PREFIX", "documents"),
 		BoltPath:    getEnvString("DS_BOLTDB_PATH", "docshelf.db"),
@@ -49,7 +52,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	backend, err := getBackend(cfg, fs)
+	ti, err := getTextIndex(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	backend, err := getBackend(cfg, fs, ti)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -81,7 +89,7 @@ func getFileStore(cfg Config) (docshelf.FileStore, error) {
 	}
 }
 
-func getBackend(cfg Config, fs docshelf.FileStore) (docshelf.Backend, error) {
+func getBackend(cfg Config, fs docshelf.FileStore, ti docshelf.TextIndex) (docshelf.Backend, error) {
 	logrus.WithField("backend", cfg.Backend).Info("doc backend")
 	switch cfg.Backend {
 	case "dynamo":
@@ -94,12 +102,24 @@ func getBackend(cfg Config, fs docshelf.FileStore) (docshelf.Backend, error) {
 		return backend, nil
 	default:
 		log.Info("initializing bolt backend")
-		backend, err := bolt.New(cfg.BoltPath, fs)
+		backend, err := bolt.New(cfg.BoltPath, fs, ti)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create bolt backend")
 		}
 
 		return backend, nil
+	}
+}
+
+func getTextIndex(cfg Config) (docshelf.TextIndex, error) {
+	switch cfg.TextIndex {
+	default:
+		ti, err := bleve.New()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create bleve text index")
+		}
+
+		return ti, nil
 	}
 }
 

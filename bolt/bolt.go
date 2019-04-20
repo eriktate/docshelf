@@ -7,7 +7,6 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -22,12 +21,12 @@ var (
 type Store struct {
 	db *bolt.DB
 	fs docshelf.FileStore
+	ti docshelf.TextIndex
 }
 
 // New returns a new boltdb Store. This Store can fulfill the interfaces for UserStore, GroupStore, DocStore,
 // and PolicyStore.
-func New(filename string, fs docshelf.FileStore) (Store, error) {
-	logrus.Info("Somehow creating a new bolt instance")
+func New(filename string, fs docshelf.FileStore, ti docshelf.TextIndex) (Store, error) {
 	db, err := bolt.Open(filename, 0600, nil)
 	if err != nil {
 		return Store{}, err
@@ -37,7 +36,7 @@ func New(filename string, fs docshelf.FileStore) (Store, error) {
 		return Store{}, err
 	}
 
-	return Store{db, fs}, nil
+	return Store{db, fs, ti}, nil
 }
 
 // Close closes the bolt DB file. It currently omits the error for convenience, but that should maybe change

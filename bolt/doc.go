@@ -1,11 +1,9 @@
 package bolt
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -34,45 +32,63 @@ func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	return doc, nil
 }
 
-// ListDocs fetches a slice of docshelf Document metadata from bolt that fit the given prefix and
-// tags supplied.
-func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]docshelf.Doc, error) {
+// ListDocs fetches a slice of docshelf Document metadata from bolt. If a query is provided, then the configured
+// docshelf.TextIndex will be used to get a set of document paths. If tags are also provided, then they will be used
+// to further filter down the results. If no query is provided, but tags are, then the tags will filter down the entire
+// set of documents stored.
+func (s Store) ListDocs(ctx context.Context, query string, tags ...string) ([]docshelf.Doc, error) {
 	var docs []docshelf.Doc
+	var foundPaths []string
+
+	if query != "" {
+		var err error
+		foundPaths, err = s.ti.Search(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// short circuit if no tags supplied
+	if len(tags) == 0 {
+		return s.listDocsTx(ctx, foundPaths)
+	}
+
+	var tagged []docshelf.Doc
 	if err := s.db.View(func(tx *bolt.Tx) error {
-		// prefer to filter by tag first if supplied.
-		if len(tags) > 0 {
-			tagged, err := s.listTaggedDocs(ctx, tx, tags)
-			if err != nil {
-				return err
-			}
-
-			// short circuit if no prefix supplied.
-			if prefix == "" {
-				docs = tagged
-				return nil
-			}
-
-			listing := make([]docshelf.Doc, 0, len(tagged))
-			for _, doc := range tagged {
-				if strings.HasPrefix(doc.Path, prefix) {
-					listing = append(listing, doc)
-				}
-			}
-
-			docs = listing
-			return nil
+		var err error
+		tagged, err = s.listTaggedDocs(ctx, tx, tags)
+		if err != nil {
+			return err
 		}
 
-		// if no tags supplied, scan for prefix
-		c := tx.Bucket(docBucket).Cursor()
+		return nil
+	}); err != nil {
+		return nil, errors.Wrap(err, "failed to list prefix from bolt")
+	}
 
-		pre := []byte(prefix)
+	// short circuit if no query was supplied
+	if query == "" {
+		return tagged, nil
+	}
 
-		// TODO (erik): confirm behavior if prefix is blank.
-		for k, v := c.Seek(pre); k != nil && bytes.HasPrefix(k, pre); k, v = c.Next() {
+	if len(foundPaths) > 0 {
+		for _, doc := range tagged {
+			if contains(foundPaths, doc.Path) {
+				docs = append(docs, doc)
+			}
+		}
+	}
+
+	return docs, nil
+}
+
+func (s Store) listDocsTx(ctx context.Context, paths []string) ([]docshelf.Doc, error) {
+	var docs []docshelf.Doc
+	if err := s.db.View(func(tx *bolt.Tx) error {
+		for _, p := range paths {
 			var doc docshelf.Doc
-			if err := json.Unmarshal(v, &doc); err != nil {
-				return errors.Wrap(err, "failed to unmarshal doc from bolt")
+			if err := s.getItem(ctx, tx, docBucket, p, &doc); err != nil {
+				return err
 			}
 
 			docs = append(docs, doc)
@@ -80,7 +96,7 @@ func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]d
 
 		return nil
 	}); err != nil {
-		return nil, errors.Wrap(err, "failed to list prefix from bolt")
+		return nil, err
 	}
 
 	return docs, nil

@@ -10,7 +10,7 @@ import (
 
 const defIndexPath = "docshelf.bleve"
 
-// An Index implements the docshelf.Indexer interface.
+// An Index implements the docshelf.TextIndex interface.
 type Index struct {
 	idx bleve.Index
 }
