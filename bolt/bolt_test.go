@@ -287,7 +287,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	}
 }
 
-// TODO (erik): This test is bogus now. Need to update it.
+// TODO (erik): This test isn't exhaustive enough. Need to fix.
 func Test_ListDocs(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
@@ -330,7 +330,7 @@ func Test_ListDocs(t *testing.T) {
 	}
 
 	// ASSERT
-	if len(list) != 0 {
+	if len(list) != 2 {
 		t.Fatal("listing didn't return enough results")
 	}
 }

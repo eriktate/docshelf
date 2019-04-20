@@ -42,6 +42,25 @@ func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 func (s Store) ListDocs(ctx context.Context, query string, tags ...string) ([]docshelf.Doc, error) {
 	var docs []docshelf.Doc
 	var foundPaths []string
+
+	// do a full listing if no filters are given
+	if query == "" && len(tags) == 0 {
+		input := dynamodb.ScanInput{
+			TableName: aws.String(s.docTable),
+		}
+
+		res, err := s.client.ScanRequest(&input).Send()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := dyna.UnmarshalListOfMaps(res.Items, &docs); err != nil {
+			return nil, err
+		}
+
+		return docs, nil
+	}
+
 	if query != "" {
 		var err error
 		foundPaths, err = s.ti.Search(ctx, query)
