@@ -40,6 +40,29 @@ func (s Store) ListDocs(ctx context.Context, query string, tags ...string) ([]do
 	var docs []docshelf.Doc
 	var foundPaths []string
 
+	// do a full listing if no filters are given
+	if query == "" && len(tags) == 0 {
+		if err := s.db.View(func(tx *bolt.Tx) error {
+			b := tx.Bucket(docBucket)
+			if err := b.ForEach(func(k, v []byte) error {
+				var doc docshelf.Doc
+				if err := json.Unmarshal(v, &doc); err != nil {
+					return err
+				}
+
+				docs = append(docs, doc)
+				return nil
+			}); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+
+		return docs, nil
+	}
+
 	if query != "" {
 		var err error
 		foundPaths, err = s.ti.Search(ctx, query)
