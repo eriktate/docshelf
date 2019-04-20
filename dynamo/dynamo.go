@@ -40,6 +40,11 @@ type Store struct {
 
 // New creates a new Store struct.
 func New(fs docshelf.FileStore, logger *logrus.Logger) (Store, error) {
+	if logger == nil {
+		logger = logrus.New()
+		logger.SetOutput(nil)
+	}
+
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		return Store{}, err

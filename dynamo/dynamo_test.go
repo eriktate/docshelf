@@ -44,7 +44,7 @@ func Test_PutGetRemoveUser(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(nil)
+	store, err := New(nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func Test_ListUsers(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(nil)
+	store, err := New(nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +161,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(mock.NewFileStore())
+	store, err := New(mock.NewFileStore(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,7 +206,7 @@ func Test_ListDocs(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(mock.NewFileStore())
+	store, err := New(mock.NewFileStore(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +255,7 @@ func Test_TagLifecycle(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(mock.NewFileStore())
+	store, err := New(mock.NewFileStore(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -330,7 +330,7 @@ func Test_PutGetRemoveGroup(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(nil)
+	store, err := New(nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,7 +385,7 @@ func Test_PutGetRemovePolicy(t *testing.T) {
 	// SETUP
 	ctx := context.Background()
 
-	store, err := New(nil)
+	store, err := New(nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
