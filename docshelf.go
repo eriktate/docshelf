@@ -62,7 +62,7 @@ type DocStore interface {
 // A UserStore knows how to store and retrieve docshelf users.
 type UserStore interface {
 	GetUser(ctx context.Context, id string) (User, error)
-	GetEmail(ctx context.Context, email string) (User, error)
+	// GetEmail(ctx context.Context, email string) (User, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	PutUser(ctx context.Context, user User) (string, error)
 	RemoveUser(ctx context.Context, id string) error
@@ -85,6 +85,14 @@ type PolicyStore interface {
 // An Authenticator knows how to authenticate user credentials.
 type Authenticator interface {
 	Authenticate(ctx context.Context, email, token string)
+}
+
+// A Backend is an aggregation of almost all docshelf store interfaces.
+type Backend interface {
+	DocStore
+	UserStore
+	GroupStore
+	// PolicyStore
 }
 
 // A FileStore knows how to store and retrieve docshelf document contents.

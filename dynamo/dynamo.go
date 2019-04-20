@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbiface"
 	"github.com/docshelf/docshelf"
 	"github.com/docshelf/docshelf/env"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -28,6 +29,7 @@ const (
 type Store struct {
 	client dynamodbiface.DynamoDBAPI
 	fs     docshelf.FileStore
+	log    *logrus.Logger
 
 	userTable   string
 	docTable    string
@@ -37,7 +39,7 @@ type Store struct {
 }
 
 // New creates a new Store struct.
-func New(fs docshelf.FileStore) (Store, error) {
+func New(fs docshelf.FileStore, logger *logrus.Logger) (Store, error) {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
 		return Store{}, err
@@ -49,6 +51,7 @@ func New(fs docshelf.FileStore) (Store, error) {
 	store := Store{
 		client:      svc,
 		fs:          fs,
+		log:         logger,
 		userTable:   env.GetEnvString("DS_DYNAMO_USER_TABLE", defUserTable),
 		docTable:    env.GetEnvString("DS_DYNAMO_DOC_TABLE", defDocTable),
 		tagTable:    env.GetEnvString("DS_DYNAMO_TAG_TABLE", defTagTable),
@@ -99,7 +102,7 @@ func (s Store) ensureTables() error {
 	var ensureErr error
 	go func() {
 		defer wg.Done()
-		if err := ensureTable(s.client, s.userTable, userTableInput(s.userTable)); err != nil {
+		if err := s.ensureTable(s.userTable, userTableInput(s.userTable)); err != nil {
 			ensureErr = err
 		}
 	}()
@@ -107,7 +110,7 @@ func (s Store) ensureTables() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := ensureTable(s.client, s.docTable, docTableInput(s.docTable)); err != nil {
+		if err := s.ensureTable(s.docTable, docTableInput(s.docTable)); err != nil {
 			ensureErr = err
 		}
 	}()
@@ -115,7 +118,7 @@ func (s Store) ensureTables() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := ensureTable(s.client, s.tagTable, tagTableInput(s.tagTable)); err != nil {
+		if err := s.ensureTable(s.tagTable, tagTableInput(s.tagTable)); err != nil {
 			ensureErr = err
 		}
 	}()
@@ -123,7 +126,7 @@ func (s Store) ensureTables() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := ensureTable(s.client, s.groupTable, groupTableInput(s.groupTable)); err != nil {
+		if err := s.ensureTable(s.groupTable, groupTableInput(s.groupTable)); err != nil {
 			ensureErr = err
 		}
 	}()
@@ -131,7 +134,7 @@ func (s Store) ensureTables() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := ensureTable(s.client, s.policyTable, policyTableInput(s.policyTable)); err != nil {
+		if err := s.ensureTable(s.policyTable, policyTableInput(s.policyTable)); err != nil {
 			ensureErr = err
 		}
 	}()
@@ -140,22 +143,25 @@ func (s Store) ensureTables() error {
 	return ensureErr
 }
 
-func ensureTable(svc dynamodbiface.DynamoDBAPI, table string, input dynamodb.CreateTableInput) error {
+func (s Store) ensureTable(table string, input dynamodb.CreateTableInput) error {
 	describe := dynamodb.DescribeTableInput{
 		TableName: aws.String(table),
 	}
 
-	if _, err := svc.DescribeTableRequest(&describe).Send(); err != nil {
+	if _, err := s.client.DescribeTableRequest(&describe).Send(); err != nil {
 		// TODO (erik): This seems like a really fragile err check. Need to find a better way
 		// to do this.
 		if strings.Contains(err.Error(), dynamodb.ErrCodeResourceNotFoundException) {
-			if _, err := svc.CreateTableRequest(&input).Send(); err != nil {
+			s.log.WithField("table", table).Info("table not found, provisioning...")
+			if _, err := s.client.CreateTableRequest(&input).Send(); err != nil {
 				return err
 			}
 
-			if err := svc.WaitUntilTableExists(&describe); err != nil {
+			if err := s.client.WaitUntilTableExists(&describe); err != nil {
 				return err
 			}
+
+			s.log.WithField("table", table).Info("finished provisioning")
 		} else {
 			return err
 		}
