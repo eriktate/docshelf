@@ -94,7 +94,7 @@ func getBackend(cfg Config, fs docshelf.FileStore, ti docshelf.TextIndex) (docsh
 	switch cfg.Backend {
 	case "dynamo":
 		log.Info("initializing dynamo backend")
-		backend, err := dynamo.New(fs, log)
+		backend, err := dynamo.New(fs, ti, log)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create dynamo backend")
 		}
