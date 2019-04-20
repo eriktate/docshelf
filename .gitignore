@@ -1,7 +1,17 @@
-.coverage.out
-*.db
+# local data storage
 documents/
+*.db
+*.bleve
+
+# common binaries
 /main
+/server
+
+# code coverage
+.coverage.out
+coverage.html
+
+# local development
 node_modules/
 elm-stuff/
 dist/
