@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode exposing (Decoder, bool, field, list, map2, map4, maybe, oneOf, string)
+import Json.Decode as Decode exposing (Decoder, bool, field, list, map2, map4, maybe, oneOf, string)
 import Json.Encode as Encode
 import Markdown
 import String exposing (join, split, toLower)
@@ -57,6 +57,7 @@ type Msg
     | SubmitDoc
     | HandleResult (Result Http.Error ())
     | ToggleMenu
+    | Search String
 
 
 newDoc : Doc
@@ -176,6 +177,9 @@ update msg model =
             in
             ( { model | menuStatus = newStatus }, Cmd.none )
 
+        Search query ->
+            ( model, Cmd.none )
+
 
 findDoc : List Doc -> String -> Doc
 findDoc docs path =
@@ -242,8 +246,12 @@ docForm doc =
 navBar : MenuStatus -> Html Msg
 navBar status =
     nav []
-        [ hamburger status
-        , h2 [] [ text "Doc Shelf" ]
+        [ span [ class "nav-left" ]
+            [ hamburger status
+            , h2 [] [ text "Doc Shelf" ]
+            ]
+        , span [ class "nav-right" ]
+            [ input [ placeholder "Search...", class "search", onEnter Search ] [] ]
         ]
 
 
@@ -295,7 +303,7 @@ menu docs status =
 
 optionalField : String -> Decoder a -> a -> Decoder a
 optionalField name try default =
-    oneOf [ field name try, Json.Decode.succeed default ]
+    oneOf [ field name try, Decode.succeed default ]
 
 
 docDecoder : Decoder Doc
@@ -326,3 +334,19 @@ encodeDoc doc =
         , ( "title", Encode.string doc.title )
         , ( "content", Encode.string doc.content )
         ]
+
+
+onEnter : (String -> msg) -> Attribute msg
+onEnter tagger =
+    let
+        isEnter code =
+            if code == 13 then
+                Decode.succeed ""
+
+            else
+                Decode.fail ""
+
+        decodeEnter =
+            Decode.andThen isEnter keyCode
+    in
+    on "keydown" <| Decode.map2 (\key value -> tagger value) decodeEnter targetValue
