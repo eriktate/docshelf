@@ -259,7 +259,9 @@ navBar status =
             , h2 [] [ text "Doc Shelf" ]
             ]
         , span [ class "nav-right" ]
-            [ input [ placeholder "Search...", class "search", onEnter Search ] [] ]
+            [ input [ placeholder "Search...", class "search", onEnter Search ] []
+            , div [ class "g-signin2", attribute "data-onsuccess" "onSignIn" ] []
+            ]
         ]
 
 

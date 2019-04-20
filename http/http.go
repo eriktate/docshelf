@@ -95,6 +95,12 @@ func (s Server) buildRoutes() chi.Router {
 	})
 
 	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
+	mux.HandleFunc("/auth", helloWorld)
 
 	return mux
+}
+
+func helloWorld(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Hit helloworld")
+	w.Write([]byte("Hello, world!"))
 }
