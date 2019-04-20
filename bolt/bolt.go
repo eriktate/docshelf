@@ -7,6 +7,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -26,6 +27,7 @@ type Store struct {
 // New returns a new boltdb Store. This Store can fulfill the interfaces for UserStore, GroupStore, DocStore,
 // and PolicyStore.
 func New(filename string, fs docshelf.FileStore) (Store, error) {
+	logrus.Info("Somehow creating a new bolt instance")
 	db, err := bolt.Open(filename, 0600, nil)
 	if err != nil {
 		return Store{}, err

@@ -29,7 +29,7 @@ func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 
 	content, err := s.fs.ReadFile(path)
 	if err != nil {
-		return doc, errors.Wrap(err, "failed to read file from file store")
+		return doc, err
 	}
 
 	doc.Content = string(content)

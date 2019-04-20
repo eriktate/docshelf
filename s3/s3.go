@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/s3iface"
+	"github.com/docshelf/docshelf"
 )
 
 // A Store that can write and read documents from S3.
@@ -51,6 +53,9 @@ func (s Store) ReadFile(path string) ([]byte, error) {
 
 	res, err := s.client.GetObjectRequest(&input).Send()
 	if err != nil {
+		if strings.Contains(err.Error(), "NoSuchKey") {
+			return nil, docshelf.NewErrDoesNotExist(fmt.Sprintf("could not find %s/%s/%s", s.bucket, s.root, path))
+		}
 		return nil, err
 	}
 
