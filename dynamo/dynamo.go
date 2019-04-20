@@ -57,6 +57,7 @@ func New(fs docshelf.FileStore, ti docshelf.TextIndex, logger *logrus.Logger) (S
 	store := Store{
 		client:      svc,
 		fs:          fs,
+		ti:          ti,
 		log:         logger,
 		userTable:   env.GetEnvString("DS_DYNAMO_USER_TABLE", defUserTable),
 		docTable:    env.GetEnvString("DS_DYNAMO_DOC_TABLE", defDocTable),
