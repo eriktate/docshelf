@@ -22,18 +22,13 @@ func New() (Index, error) {
 	path := env.GetEnvString("DS_INDEX_PATH", defIndexPath)
 	stat, err := os.Stat(path)
 	if err != nil {
-		if err == os.ErrNotExist {
-			mapping := bleve.NewIndexMapping()
-			idx, err := bleve.New(env.GetEnvString("DS_INDEX_PATH", defIndexPath), mapping)
-			if err != nil {
-				return Index{}, err
-			}
-
-			return Index{idx}, nil
-
+		mapping := bleve.NewIndexMapping()
+		idx, err := bleve.New(env.GetEnvString("DS_INDEX_PATH", defIndexPath), mapping)
+		if err != nil {
+			return Index{}, err
 		}
 
-		return Index{}, err
+		return Index{idx}, nil
 	}
 
 	if !stat.IsDir() {
