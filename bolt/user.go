@@ -3,6 +3,7 @@ package bolt
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -15,7 +16,22 @@ import (
 func (s Store) GetUser(ctx context.Context, id string) (docshelf.User, error) {
 	var user docshelf.User
 
-	if err := s.fetchItem(ctx, userBucket, id, &user); err != nil {
+	if err := s.db.View(func(tx *bolt.Tx) error {
+		if isEmail(id) {
+			var userID string
+			if err := s.getItem(ctx, tx, userEmailBucket, id, &userID); err != nil {
+				return err
+			}
+
+			id = userID
+		}
+
+		if err := s.getItem(ctx, tx, userBucket, id, &user); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return user, err
 	}
 
@@ -24,12 +40,6 @@ func (s Store) GetUser(ctx context.Context, id string) (docshelf.User, error) {
 	}
 
 	return user, nil
-}
-
-// GetEmail fetches an existing docshelf User from boltdb given an email.
-func (s Store) GetEmail(ctx context.Context, id string) (docshelf.User, error) {
-	// TODO (erik): Needs to be implemented.
-	return docshelf.User{}, errors.New("unimplemented")
 }
 
 // ListUsers returns all docshelf Users stored in bolt db.
@@ -68,14 +78,28 @@ func (s Store) ListUsers(ctx context.Context) ([]docshelf.User, error) {
 // PutUser creates a new docshelf User or updates an existing one in boltdb.
 func (s Store) PutUser(ctx context.Context, user docshelf.User) (string, error) {
 	if user.ID == "" {
+		if user.Email == "" {
+			return "", errors.New("cannot create a new user without an email address")
+		}
+
 		user.ID = xid.New().String()
 		user.CreatedAt = time.Now()
 	}
 
 	user.UpdatedAt = time.Now()
 
-	if err := s.putItem(ctx, userBucket, user.ID, user); err != nil {
-		return "", errors.Wrap(err, "failed to put user into bolt")
+	if err := s.db.Update(func(tx *bolt.Tx) error {
+		if err := s.putItem(ctx, tx, userBucket, user.ID, user); err != nil {
+			return errors.Wrap(err, "failed to put user into bolt")
+		}
+
+		if err := s.putItem(ctx, tx, userEmailBucket, user.ID, user.ID); err != nil {
+			return errors.Wrap(err, "failed to save secondary email index")
+		}
+
+		return nil
+	}); err != nil {
+		return "", err
 	}
 
 	return user.ID, nil
@@ -107,4 +131,9 @@ func (s Store) RemoveUser(ctx context.Context, id string) error {
 
 		return nil
 	}), "failed to remove user from bolt")
+}
+
+// really naive check for now. Should probably put a more robust regex in here at some point.
+func isEmail(source string) bool {
+	return len(strings.Split(source, "@")) > 1
 }

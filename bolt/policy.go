@@ -30,7 +30,7 @@ func (s Store) PutPolicy(ctx context.Context, policy docshelf.Policy) (string, e
 
 	policy.UpdatedAt = time.Now()
 
-	if err := s.putItem(ctx, policyBucket, policy.ID, policy); err != nil {
+	if err := s.storeItem(ctx, policyBucket, policy.ID, policy); err != nil {
 		return "", errors.Wrap(err, "failed to put policy into bolt")
 	}
 

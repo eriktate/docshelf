@@ -182,7 +182,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 	doc.Content = "" // need to clear content before storing doc
 
 	// save metadata
-	if err := s.putItem(ctx, docBucket, doc.Path, doc); err != nil {
+	if err := s.storeItem(ctx, docBucket, doc.Path, doc); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc fails
 			return errors.Wrap(err, "failed to put cleanup file after bolt failure")
 		}
