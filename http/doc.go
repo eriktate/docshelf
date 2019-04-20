@@ -55,7 +55,7 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 
 // GetList handles requests for listing Docs by path prefix.
 func (h DocHandler) GetList(w http.ResponseWriter, r *http.Request) {
-	query := chi.URLParam(r, "query")
+	query := r.URL.Query().Get("query")
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
 	if len(tags) == 1 && tags[0] == "" {
 		tags = nil
