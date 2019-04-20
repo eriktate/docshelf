@@ -95,6 +95,14 @@ getDoc path =
         }
 
 
+searchDocs : String -> Cmd Msg
+searchDocs query =
+    Http.get
+        { url = "http://localhost:1337/api/doc/list?query=" ++ query
+        , expect = Http.expectJson FetchDocs docsDecoder
+        }
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
@@ -178,7 +186,7 @@ update msg model =
             ( { model | menuStatus = newStatus }, Cmd.none )
 
         Search query ->
-            ( model, Cmd.none )
+            ( model, searchDocs query )
 
 
 findDoc : List Doc -> String -> Doc
