@@ -2,7 +2,6 @@ package dynamo
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -36,54 +35,57 @@ func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	return doc, nil
 }
 
-// ListDocs fetches a slice of docshelf Document metadata from dynamodb that fit the give prefix
-// and tags supplied.
-func (s Store) ListDocs(ctx context.Context, prefix string, tags ...string) ([]docshelf.Doc, error) {
-	// prefer to filter by tag first if supplied.
-	if len(tags) > 0 {
-		tagged, err := s.listTaggedDocs(ctx, tags)
+// ListDocs fetches a slice of docshelf Document metadata from dynamodb. If a query is provided, then the configured
+// docshelf.TextIndex will be used to get a set of document paths. If tags are also provided, then they will be used
+// to further filter down the results. If no query is provided, but tags are, then the tags will filter down the entire
+// set of documents stored.
+func (s Store) ListDocs(ctx context.Context, query string, tags ...string) ([]docshelf.Doc, error) {
+	var docs []docshelf.Doc
+	var foundPaths []string
+	if query != "" {
+		var err error
+		foundPaths, err = s.ti.Search(ctx, query)
 		if err != nil {
 			return nil, err
 		}
-
-		// short circuit if no prefix supplied
-		if prefix == "" {
-			return tagged, nil
-		}
-
-		listing := make([]docshelf.Doc, 0, len(tagged))
-		for _, doc := range tagged {
-			if strings.HasPrefix(doc.Path, prefix) {
-				listing = append(listing, doc)
-			}
-		}
-
-		return listing, nil
 	}
 
-	input := dynamodb.ScanInput{
-		TableName: aws.String(s.docTable),
+	if len(tags) == 0 {
+		return s.listDocs(ctx, foundPaths)
 	}
 
-	res, err := s.client.ScanRequest(&input).Send()
+	tagged, err := s.listTaggedDocs(ctx, tags)
 	if err != nil {
 		return nil, err
 	}
 
-	var docs []docshelf.Doc
-	if err := dyna.UnmarshalListOfMaps(res.Items, &docs); err != nil {
-		return nil, err
+	if query == "" {
+		return tagged, nil
 	}
 
-	// TODO (erik): Duplicate of code above. Should refactor to combine.
-	listing := make([]docshelf.Doc, 0, len(docs))
-	for _, doc := range docs {
-		if strings.HasPrefix(doc.Path, prefix) {
-			listing = append(listing, doc)
+	if len(foundPaths) > 0 {
+		for _, doc := range tagged {
+			if contains(foundPaths, doc.Path) {
+				docs = append(docs, doc)
+			}
 		}
 	}
 
-	return listing, nil
+	return docs, nil
+}
+
+func (s Store) listDocs(ctx context.Context, paths []string) ([]docshelf.Doc, error) {
+	var docs []docshelf.Doc
+	for _, path := range paths {
+		var doc docshelf.Doc
+		if err := s.getItem(ctx, s.docTable, "path", path, &doc); err != nil {
+			return nil, err
+		}
+
+		docs = append(docs, doc)
+	}
+
+	return docs, nil
 }
 
 func (s Store) listTaggedDocs(ctx context.Context, tags []string) ([]docshelf.Doc, error) {
@@ -131,8 +133,14 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 
 	doc.UpdatedAt = time.Now()
 
+	// save content
 	if err := s.fs.WriteFile(doc.Path, []byte(doc.Content)); err != nil {
 		return errors.Wrap(err, "failed to write doc to file store")
+	}
+
+	// full text index
+	if err := s.ti.Index(ctx, doc); err != nil {
+		return errors.Wrap(err, "failed to text index doc")
 	}
 
 	doc.Content = "" // need to clear content before storing doc
@@ -147,6 +155,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 		Item:      marshaled,
 	}
 
+	// save metadata
 	if _, err := s.client.PutItemRequest(&input).Send(); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc failes
 			return errors.Wrapf(err, "cleanup failed for file: %s", doc.Path)

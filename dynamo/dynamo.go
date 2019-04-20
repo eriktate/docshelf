@@ -29,6 +29,7 @@ const (
 type Store struct {
 	client dynamodbiface.DynamoDBAPI
 	fs     docshelf.FileStore
+	ti     docshelf.TextIndex
 	log    *logrus.Logger
 
 	userTable   string
@@ -39,7 +40,7 @@ type Store struct {
 }
 
 // New creates a new Store struct.
-func New(fs docshelf.FileStore, logger *logrus.Logger) (Store, error) {
+func New(fs docshelf.FileStore, ti docshelf.TextIndex, logger *logrus.Logger) (Store, error) {
 	if logger == nil {
 		logger = logrus.New()
 		logger.SetOutput(nil)
@@ -56,6 +57,7 @@ func New(fs docshelf.FileStore, logger *logrus.Logger) (Store, error) {
 	store := Store{
 		client:      svc,
 		fs:          fs,
+		ti:          ti,
 		log:         logger,
 		userTable:   env.GetEnvString("DS_DYNAMO_USER_TABLE", defUserTable),
 		docTable:    env.GetEnvString("DS_DYNAMO_DOC_TABLE", defDocTable),
