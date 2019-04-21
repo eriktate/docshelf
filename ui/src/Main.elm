@@ -28,6 +28,12 @@ type alias Doc =
     }
 
 
+type alias User =
+    { email : String
+    , password : String
+    }
+
+
 type alias SuccessResponse =
     { message : Maybe String
     , error : Maybe String
@@ -44,6 +50,8 @@ type alias Model =
     { docs : List Doc
     , current : Doc
     , menuStatus : MenuStatus
+    , loggedIn : Bool
+    , user : User
     }
 
 
@@ -58,6 +66,10 @@ type Msg
     | HandleResult (Result Http.Error ())
     | ToggleMenu
     | Search String
+    | SetEmail String
+    | SetPassword String
+    | Login
+    | HandleLogin (Result Http.Error ())
 
 
 newDoc : Doc
@@ -74,6 +86,11 @@ init _ =
     ( { docs = []
       , current = newDoc
       , menuStatus = Unused
+      , loggedIn = False
+      , user =
+            { email = ""
+            , password = ""
+            }
       }
     , fetchDocs
     )
@@ -103,6 +120,27 @@ searchDocs query =
         }
 
 
+login : User -> Cmd Msg
+login user =
+    Http.post
+        { url = "http://localhost:1337/login"
+        , body = Http.jsonBody <| encodeLogin user
+        , expect = Http.expectWhatever HandleLogin
+        }
+
+
+
+-- Http.riskyRequest
+--     { method = "POST"
+--     , headers = []
+--     , url = "http://localhost:1337/login"
+--     , body = Http.jsonBody <| encodeLogin user
+--     , expect = Http.expectWhatever HandleLogin
+--     , timeout = Nothing
+--     , tracker = Nothing
+--     }
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
@@ -117,10 +155,19 @@ update msg model =
         FetchDocs result ->
             case result of
                 Ok docs ->
-                    ( { model | docs = docs }, Cmd.none )
+                    ( { model | docs = docs, loggedIn = True }, Cmd.none )
 
-                Err _ ->
-                    ( model, Cmd.none )
+                Err err ->
+                    case err of
+                        Http.BadStatus status ->
+                            if status == 401 then
+                                ( { model | loggedIn = False }, Cmd.none )
+
+                            else
+                                ( model, Cmd.none )
+
+                        _ ->
+                            ( model, Cmd.none )
 
         FetchDoc result ->
             case result of
@@ -129,6 +176,29 @@ update msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
+
+        SetEmail email ->
+            let
+                user =
+                    model.user
+
+                updated =
+                    { user | email = email }
+            in
+            ( { model | user = updated }, Cmd.none )
+
+        SetPassword password ->
+            let
+                user =
+                    model.user
+
+                updated =
+                    { user | password = password }
+            in
+            ( { model | user = updated }, Cmd.none )
+
+        Login ->
+            ( model, login model.user )
 
         SetTitle title ->
             let
@@ -166,6 +236,14 @@ update msg model =
             case result of
                 Ok res ->
                     ( model, fetchDocs )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
+        HandleLogin result ->
+            case result of
+                Ok res ->
+                    ( { model | loggedIn = True }, fetchDocs )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -218,13 +296,42 @@ setContent content doc =
 
 view : Model -> Html Msg
 view model =
+    let
+        primaryContent =
+            if model.loggedIn then
+                app model.current
+
+            else
+                loginView
+    in
     div []
         [ navBar model.menuStatus
         , menu model.docs model.menuStatus
-        , main_ []
-            [ docForm model.current
-            , previewDoc model.current
+        , primaryContent
+        ]
+
+
+app : Doc -> Html Msg
+app doc =
+    main_ []
+        [ docForm doc
+        , previewDoc doc
+        ]
+
+
+loginView : Html Msg
+loginView =
+    Html.form [ class "login" ]
+        [ h1 [] [ text "Login" ]
+        , fieldset []
+            [ legend [] [ text "Email" ]
+            , input [ onInput SetEmail ] []
             ]
+        , fieldset []
+            [ legend [] [ text "Password" ]
+            , input [ type_ "password", onInput SetPassword ] []
+            ]
+        , button [ type_ "button", onClick Login, class "button", class "primary-button" ] [ text "Login" ]
         ]
 
 
@@ -343,6 +450,14 @@ encodeDoc doc =
         [ ( "path", Encode.string doc.path )
         , ( "title", Encode.string doc.title )
         , ( "content", Encode.string doc.content )
+        ]
+
+
+encodeLogin : User -> Encode.Value
+encodeLogin user =
+    Encode.object
+        [ ( "email", Encode.string user.email )
+        , ( "token", Encode.string user.password )
         ]
 
 

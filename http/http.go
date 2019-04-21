@@ -73,7 +73,7 @@ func (s Server) CheckHandlers() error {
 func (s Server) buildRoutes() chi.Router {
 	mux := chi.NewRouter()
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"http://localhost:1234"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -103,15 +103,11 @@ func (s Server) buildRoutes() chi.Router {
 	})
 
 	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
-	mux.HandleFunc("/auth", helloWorld)
 	mux.Post("/login", s.handleLogin)
 
-	return mux
-}
+	mux.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
 
-func helloWorld(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("Hit helloworld")
-	w.Write([]byte("Hello, world!"))
+	return mux
 }
 
 func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -139,9 +135,9 @@ func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// TODO (erik): Need to sign this data and add an expiration.
 	// Also may need to expand the data stored and remove the HttpOnly.
 	identity := http.Cookie{
-		Name:     "session",
-		Value:    user.ID,
-		HttpOnly: true,
+		Name:  "session",
+		Value: user.ID,
+		// HttpOnly: true,
 	}
 
 	http.SetCookie(w, &identity)

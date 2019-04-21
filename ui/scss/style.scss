@@ -166,6 +166,12 @@ pre {
   min-width: 20rem;
 }
 
+.login {
+  @extend %panel;
+  margin: 3rem auto;
+  width: 40rem;
+}
+
 .hamburger {
   transform: scale(0.5);
 }
