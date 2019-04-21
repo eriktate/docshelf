@@ -7,6 +7,7 @@ import (
 	"github.com/docshelf/docshelf"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // ID is a struct for marshaling to and from JSON documents containing an ID.
@@ -52,21 +53,30 @@ func (h UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 	var user docshelf.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		h.log.Error(err)
-		badRequest(w, "invalid request body, could not create user")
+		badRequest(w, "invalid request body, could not save user")
 		return
 	}
 
+	// TODO (erik): Adjust the cost parameter once we can benchmark the time spent hashing the password.
+	hashed, err := bcrypt.GenerateFromPassword([]byte(user.Token), 12)
+
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while saving user information")
+	}
+
+	user.Token = string(hashed)
 	id, err := h.userStore.PutUser(r.Context(), user)
 	if err != nil {
 		h.log.Error(err)
-		serverError(w, "something went wrong while saving user")
+		serverError(w, "something went wrong while saving user information")
 		return
 	}
 
 	data, err := json.Marshal(ID{id})
 	if err != nil {
 		h.log.Error(err)
-		serverError(w, "user was created, but the id couldn't be returned")
+		serverError(w, "user was saved, but the id couldn't be returned")
 		return
 	}
 

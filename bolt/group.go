@@ -30,7 +30,7 @@ func (s Store) PutGroup(ctx context.Context, group docshelf.Group) (string, erro
 
 	group.UpdatedAt = time.Now()
 
-	if err := s.putItem(ctx, groupBucket, group.ID, group); err != nil {
+	if err := s.storeItem(ctx, groupBucket, group.ID, group); err != nil {
 		return "", errors.Wrap(err, "failed to put group into bolt")
 	}
 

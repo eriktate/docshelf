@@ -159,12 +159,16 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 		return errors.New("can not create a new doc without a path")
 	}
 
-	if _, err := s.GetDoc(ctx, doc.Path); err != nil {
+	if existing, err := s.GetDoc(ctx, doc.Path); err == nil {
 		if !docshelf.CheckDoesNotExist(err) {
 			return errors.Wrap(err, "could not verify existing file")
 		}
 
 		doc.CreatedAt = time.Now()
+	} else {
+		// need to enforce integrity of created* fields if the doc exists.
+		doc.CreatedBy = existing.CreatedBy
+		doc.CreatedAt = existing.CreatedAt
 	}
 
 	doc.UpdatedAt = time.Now()
@@ -182,7 +186,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 	doc.Content = "" // need to clear content before storing doc
 
 	// save metadata
-	if err := s.putItem(ctx, docBucket, doc.Path, doc); err != nil {
+	if err := s.storeItem(ctx, docBucket, doc.Path, doc); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc fails
 			return errors.Wrap(err, "failed to put cleanup file after bolt failure")
 		}

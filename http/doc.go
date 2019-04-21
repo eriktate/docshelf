@@ -44,7 +44,16 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.log.WithField("doc", doc).Info("creating document")
+	// need to make sure we grab author information from the user's session
+	user, err := getContextUser(r.Context())
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while determining author")
+	}
+
+	doc.CreatedBy = user.ID
+	doc.UpdatedBy = user.ID
+
 	if err := h.docStore.PutDoc(r.Context(), doc); err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while saving document")

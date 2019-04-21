@@ -10,11 +10,12 @@ import (
 )
 
 var (
-	userBucket   = []byte("user")
-	groupBucket  = []byte("group")
-	docBucket    = []byte("doc")
-	policyBucket = []byte("policy")
-	tagBucket    = []byte("tag")
+	userBucket      = []byte("user")
+	userEmailBucket = []byte("userEmail")
+	groupBucket     = []byte("group")
+	docBucket       = []byte("doc")
+	policyBucket    = []byte("policy")
+	tagBucket       = []byte("tag")
 )
 
 // A Store implements several docshelf interfaces using boltdb as the backend.
@@ -75,20 +76,24 @@ func (s Store) fetchItem(ctx context.Context, bucket []byte, id string, out inte
 	})
 }
 
-func (s Store) putItem(ctx context.Context, bucket []byte, id string, val interface{}) error {
+func (s Store) storeItem(ctx context.Context, bucket []byte, id string, val interface{}) error {
 	if err := s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucket)
-		value, err := json.Marshal(val)
-		if err != nil {
-			return errors.Wrap(err, "failed to marshal entity for bolt storage")
-		}
-
-		if err := b.Put([]byte(id), value); err != nil {
-			return err
-		}
-
-		return nil
+		return s.putItem(ctx, tx, bucket, id, val)
 	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s Store) putItem(ctx context.Context, tx *bolt.Tx, bucket []byte, id string, val interface{}) error {
+	b := tx.Bucket(bucket)
+	value, err := json.Marshal(val)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal entity for bolt storage")
+	}
+
+	if err := b.Put([]byte(id), value); err != nil {
 		return err
 	}
 
@@ -97,6 +102,10 @@ func (s Store) putItem(ctx context.Context, bucket []byte, id string, val interf
 
 func initBuckets(tx *bolt.Tx) error {
 	if _, err := tx.CreateBucketIfNotExists(userBucket); err != nil {
+		return err
+	}
+
+	if _, err := tx.CreateBucketIfNotExists(userEmailBucket); err != nil {
 		return err
 	}
 
