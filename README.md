@@ -13,9 +13,10 @@ The fastest way to get up and running with docshelf is to build and run the dock
 $ docker build -t docshelf .
 $ docker run -it -p 1337:1337 docshelf
 ```
+Navigating to [http://localhost:1337/](http://localhost:1337/) should pop up a login window.
 
 ## Getting Started
-The easiest way to get started is to run docshelf in local mode. Assuming you have go installed:
+To get the docshelf API running natively on your local machine, you just need to have the go compiler installed.
 ```
 $ go run cmd/server/main.go
 ```
