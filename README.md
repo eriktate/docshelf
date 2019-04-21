@@ -1,6 +1,7 @@
 # DocShelf
 [![build](https://gitlab.com/docshelf/docshelf/badges/master/build.svg?job=test)](https://gitlab.com/docshelf/docshelf/pipelines) [![coverage](https://gitlab.com/docshelf/docshelf/badges/master/coverage.svg?job=test)](https://docshelf.gitlab.io/docshelf)
 [![documentation](https://godoc.org/github.com/docshelf/docshelf?status.svg)](http://godoc.org/github.com/docshelf/docshelf)
+A lightweight, team documentation solution that won't make you pull your hair out.
 
 ## !WIP!
 This project is still a pre-alpha work in progress and isn't suitable for any real use cases yet. Come back soon though! :smile:
