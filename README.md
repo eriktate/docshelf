@@ -27,8 +27,9 @@ Docshelf will automatically provision the necessary dynamo tables if they don't 
 $ DS_FILE_BACKEND=s3 DS_S3_BUCKET=docshelf-test go run cmd/server/main.go
 ```
 
-### Configuration
+## Configuration
 Currently, docshelf can only be configured through environment variables. This table shows all of the current options that can be set.
+
 | Var             | Possible Values  | Description                                     |
 |-----------------|------------------|-------------------------------------------------|
 | DS_BACKEND      | bolt, dynamo     | Backend for users, doc metadata, etc.           |
