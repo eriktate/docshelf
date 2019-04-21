@@ -2,12 +2,14 @@ package dynamo
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dyna "github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbattribute"
 	"github.com/docshelf/docshelf"
+	"github.com/pkg/errors"
 	"github.com/rs/xid"
 )
 
@@ -15,15 +17,26 @@ import (
 func (s Store) GetUser(ctx context.Context, id string) (docshelf.User, error) {
 	var user docshelf.User
 
-	if err := s.getItem(ctx, s.userTable, "id", id, &user); err != nil {
-		return user, err
+	if isEmail(id) {
+		var err error
+		user, err = s.getUserByEmail(ctx, id)
+		if err != nil {
+			return user, err
+		}
+	} else {
+		if err := s.getItem(ctx, s.userTable, "id", id, &user); err != nil {
+			return user, err
+		}
+	}
+
+	if user.DeletedAt != nil {
+		return docshelf.User{}, docshelf.NewErrRemoved("user no longer exists in dynamo")
 	}
 
 	return user, nil
 }
 
-// GetEmail fetches an existing docshelf User from dynamodb given an email.
-func (s Store) GetEmail(ctx context.Context, email string) (docshelf.User, error) {
+func (s Store) getUserByEmail(ctx context.Context, email string) (docshelf.User, error) {
 	var user docshelf.User
 	key, err := makeKey("email", email)
 	if err != nil {
@@ -70,6 +83,9 @@ func (s Store) ListUsers(ctx context.Context) ([]docshelf.User, error) {
 // PutUser creates a new docshelf User or updates an existing one in dynamodb.
 func (s Store) PutUser(ctx context.Context, user docshelf.User) (string, error) {
 	if user.ID == "" {
+		if user.Email == "" {
+			return "", errors.New("cannot create a new user without an email address")
+		}
 		user.ID = xid.New().String()
 		user.CreatedAt = time.Now()
 	}
@@ -110,4 +126,8 @@ func (s Store) RemoveUser(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func isEmail(source string) bool {
+	return len(strings.Split(source, "@")) > 1
 }
