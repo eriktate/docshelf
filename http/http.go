@@ -105,6 +105,8 @@ func (s Server) buildRoutes() chi.Router {
 	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
 	mux.Post("/login", s.handleLogin)
 
+	mux.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
+
 	return mux
 }
 
