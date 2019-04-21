@@ -35,9 +35,11 @@ Currently, docshelf can only be configured through environment variables. This t
 | DS_BACKEND      | bolt, dynamo     | Backend for users, doc metadata, etc.           |
 | DS_FILE_BACKEND | disk, s3         | How to store document content                   |
 | DS_TEXT_INDEX   | bleve, elastic\* | What text index to use for search               |
-| DS_S3_BUCKET    | <bucket name>    | The bucket to use with the s3 file backend      |
-| DS_FILE_PREFIX  | <string>         | The path/prefix to apply to all saved documents |
-| DS_HOST         | <string>         | The host for the API to listen on               |
+| DS_S3_BUCKET    | string           | The bucket to use with the s3 file backend      |
+| DS_FILE_PREFIX  | string           | The path/prefix to apply to all saved documents |
+| DS_HOST         | string           | The host for the API to listen on               |
 | DS_PORT         | 0-65535          | The port for the API to listen on               |
+
+_\*elastic is not currenlty supported, but will be in the near future_
 
 More configuration options will become available as dochself becomes more full-featured.
