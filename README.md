@@ -7,6 +7,13 @@ A lightweight, team documentation solution that won't make you pull your hair ou
 ## !WIP!
 This project is still a pre-alpha work in progress and isn't suitable for any real use cases yet. Come back soon though! :smile:
 
+## Quickstart
+The fastest way to get up and running with docshelf is to build and run the docker container.
+```
+$ docker build -t docshelf .
+$ docker run -it -p 1337:1337 docshelf
+```
+
 ## Getting Started
 The easiest way to get started is to run docshelf in local mode. Assuming you have go installed:
 ```
