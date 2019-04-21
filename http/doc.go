@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -49,6 +50,7 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while determining author")
+		return
 	}
 
 	doc.CreatedBy = user.ID
@@ -57,6 +59,27 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 	if err := h.docStore.PutDoc(r.Context(), doc); err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while saving document")
+		return
+	}
+
+	noContent(w)
+}
+
+// PinDoc handles requests from users to pin a document. It applies a special tag to the doc
+// which can be used later to find a user's pinned documents.
+func (h DocHandler) PinDoc(w http.ResponseWriter, r *http.Request) {
+	path := chi.URLParam(r, "path")
+
+	user, err := getContextUser(r.Context())
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while pinning document")
+		return
+	}
+
+	if err := h.docStore.TagDoc(r.Context(), path, fmt.Sprintf("user/%s", user.ID)); err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while pinning document")
 		return
 	}
 

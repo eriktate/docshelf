@@ -12,6 +12,7 @@ type User struct {
 	Name      string     `json:"name"`
 	Token     string     `json:"token"`
 	Groups    []string   `json:"groups"`
+	Pinned    []string   `json:"pinned"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `json:"deletedAt"`
@@ -53,7 +54,7 @@ type Policy struct {
 // A DocStore knows how to store and retrieve docshelf documents.
 type DocStore interface {
 	GetDoc(ctx context.Context, path string) (Doc, error)
-	ListDocs(ctx context.Context, path string, tags ...string) ([]Doc, error)
+	ListDocs(ctx context.Context, query string, tags ...string) ([]Doc, error)
 	PutDoc(ctx context.Context, doc Doc) error
 	TagDoc(ctx context.Context, path string, tags ...string) error
 	RemoveDoc(ctx context.Context, path string) error
