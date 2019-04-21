@@ -77,6 +77,4 @@ $ parcel watch index.html
 
 The API is configured to serve the UI as well, so you can reach the UI at `http://localhost:1337` for now.
 
-`parcel watch` is super finicky with Elm, for some reason, and occasionally totally fails to rebuild changes. Just something to keep in mind if you make changes to files in the `ui/` folder and don't see them reflected. You may need to re-run that command.
-
 *Note:* You'll need to create a user directly through the API in order to use the UI.
