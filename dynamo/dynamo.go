@@ -3,6 +3,7 @@ package dynamo
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"sync"
 
@@ -43,7 +44,7 @@ type Store struct {
 func New(fs docshelf.FileStore, ti docshelf.TextIndex, logger *logrus.Logger) (Store, error) {
 	if logger == nil {
 		logger = logrus.New()
-		logger.SetOutput(nil)
+		logger.SetOutput(ioutil.Discard)
 	}
 
 	cfg, err := external.LoadDefaultAWSConfig()
