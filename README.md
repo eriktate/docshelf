@@ -45,3 +45,25 @@ Currently, docshelf can only be configured through environment variables. This t
 _\*elastic is not currenlty supported, but will be in the near future_
 
 More configuration options will become available as dochself becomes more full-featured.
+
+## Experimental UI
+To run the experimental UI along with the API, you'll need to do the following:
+
+
+[Install Elm](https://guide.elm-lang.org/install.html)
+
+
+Install parcel:
+```
+$ npm install -g parcel-bundler
+```
+
+Run parcel:
+```
+$ cd ui/
+$ parcel watch index.html
+```
+
+The API is configured to serve the UI as well, so you can reach the UI at `http://localhost:1337` for now.
+
+*Note:* You'll need to create a user directly through the API in order to use the UI.
