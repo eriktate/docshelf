@@ -321,7 +321,7 @@ app doc =
 
 loginView : Html Msg
 loginView =
-    Html.form [ class "login" ]
+    Html.form [ class "login", onSubmit Login ]
         [ h1 [] [ text "Login" ]
         , fieldset []
             [ legend [] [ text "Email" ]
@@ -331,7 +331,7 @@ loginView =
             [ legend [] [ text "Password" ]
             , input [ type_ "password", onInput SetPassword ] []
             ]
-        , button [ type_ "button", onClick Login, class "button", class "primary-button" ] [ text "Login" ]
+        , button [ class "button", class "primary-button" ] [ text "Login" ]
         ]
 
 

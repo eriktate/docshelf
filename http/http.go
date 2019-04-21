@@ -135,9 +135,9 @@ func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// TODO (erik): Need to sign this data and add an expiration.
 	// Also may need to expand the data stored and remove the HttpOnly.
 	identity := http.Cookie{
-		Name:  "session",
-		Value: user.ID,
-		// HttpOnly: true,
+		Name:     "session",
+		Value:    user.ID,
+		HttpOnly: true,
 	}
 
 	http.SetCookie(w, &identity)
