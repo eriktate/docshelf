@@ -73,7 +73,7 @@ func (s Server) CheckHandlers() error {
 func (s Server) buildRoutes() chi.Router {
 	mux := chi.NewRouter()
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:1234"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
