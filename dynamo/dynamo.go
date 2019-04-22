@@ -217,6 +217,17 @@ func userTableInput(userTable string) dynamodb.CreateTableInput {
 }
 
 func docTableInput(docTable string) dynamodb.CreateTableInput {
+	gsiKey := dynamodb.KeySchemaElement{
+		AttributeName: aws.String("id"),
+		KeyType:       dynamodb.KeyTypeHash,
+	}
+
+	gsi := dynamodb.GlobalSecondaryIndex{
+		IndexName:  aws.String(fmt.Sprintf("%s_id_idx", docTable)),
+		KeySchema:  []dynamodb.KeySchemaElement{gsiKey},
+		Projection: &dynamodb.Projection{ProjectionType: dynamodb.ProjectionTypeKeysOnly},
+	}
+
 	hashKey := dynamodb.KeySchemaElement{
 		AttributeName: aws.String("path"),
 		KeyType:       dynamodb.KeyTypeHash,
@@ -227,10 +238,11 @@ func docTableInput(docTable string) dynamodb.CreateTableInput {
 	}
 
 	return dynamodb.CreateTableInput{
-		TableName:            aws.String(docTable),
-		BillingMode:          dynamodb.BillingModePayPerRequest,
-		AttributeDefinitions: attrDef,
-		KeySchema:            []dynamodb.KeySchemaElement{hashKey},
+		TableName:              aws.String(docTable),
+		BillingMode:            dynamodb.BillingModePayPerRequest,
+		AttributeDefinitions:   attrDef,
+		GlobalSecondaryIndexes: []dynamodb.GlobalSecondaryIndex{gsi},
+		KeySchema:              []dynamodb.KeySchemaElement{hashKey},
 	}
 }
 

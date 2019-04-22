@@ -9,6 +9,7 @@ import (
 	dyna "github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbattribute"
 	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
 )
 
 // A Tag represents the dynamo data structure of a tag.
@@ -22,7 +23,12 @@ type Tag struct {
 func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	var doc docshelf.Doc
 
-	if err := s.getItem(ctx, s.docTable, "path", path, &doc); err != nil {
+	keyName := "path"
+	if _, err := xid.FromString(path); err == nil {
+		keyName = "id"
+	}
+
+	if err := s.getItem(ctx, s.docTable, keyName, path, &doc); err != nil {
 		return doc, err
 	}
 
@@ -149,6 +155,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 
 		doc.CreatedAt = time.Now()
 	} else {
+		doc.ID = xid.New().String()
 		// need to enforce integrity of created* fields if the doc exists.
 		doc.CreatedBy = existing.CreatedBy
 		doc.CreatedAt = existing.CreatedAt

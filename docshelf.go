@@ -29,6 +29,7 @@ type Group struct {
 
 // A Doc is a full docshelf document. This includes metadata as well as content.
 type Doc struct {
+	ID        string    `json:"id"`
 	Path      string    `json:"path"`
 	Title     string    `json:"title"`
 	IsDir     bool      `json:"isDir"`

@@ -9,11 +9,18 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
 )
 
 // GetDoc fetches a docshelf Document from bolt. It will also read and package the Content from an underlying FileStore.
 func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	var doc docshelf.Doc
+	// TODO (erik): This isn't optimized into a single transaction. May want to do that at some point.
+	if _, err := xid.FromString(path); err == nil {
+		if err := s.fetchItem(ctx, docIDBucket, path, &path); err != nil {
+			return doc, err
+		}
+	}
 
 	if err := s.fetchItem(ctx, docBucket, path, &doc); err != nil {
 		if docshelf.CheckDoesNotExist(err) {
@@ -166,6 +173,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 
 		doc.CreatedAt = time.Now()
 	} else {
+		doc.ID = xid.New().String()
 		// need to enforce integrity of created* fields if the doc exists.
 		doc.CreatedBy = existing.CreatedBy
 		doc.CreatedAt = existing.CreatedAt
@@ -186,11 +194,23 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 	doc.Content = "" // need to clear content before storing doc
 
 	// save metadata
-	if err := s.storeItem(ctx, docBucket, doc.Path, doc); err != nil {
+	if err := s.db.Update(func(tx *bolt.Tx) error {
+		if err := s.putItem(ctx, tx, docBucket, doc.Path, doc); err != nil {
+
+			return errors.Wrap(err, "failed to put doc into bolt")
+		}
+
+		if err := s.putItem(ctx, tx, docIDBucket, doc.ID, doc.Path); err != nil {
+			return errors.Wrap(err, "failed to save doc secondary index in bolt")
+		}
+
+		return nil
+	}); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc fails
 			return errors.Wrap(err, "failed to put cleanup file after bolt failure")
 		}
-		return errors.Wrap(err, "failed to put doc into bolt")
+
+		return err
 	}
 
 	return nil

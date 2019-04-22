@@ -17,45 +17,17 @@ import (
 func (s Store) GetUser(ctx context.Context, id string) (docshelf.User, error) {
 	var user docshelf.User
 
+	keyName := "id"
 	if isEmail(id) {
-		var err error
-		user, err = s.getUserByEmail(ctx, id)
-		if err != nil {
-			return user, err
-		}
-	} else {
-		if err := s.getItem(ctx, s.userTable, "id", id, &user); err != nil {
-			return user, err
-		}
+		keyName = "email"
+	}
+
+	if err := s.getItem(ctx, s.userTable, keyName, id, &user); err != nil {
+		return user, err
 	}
 
 	if user.DeletedAt != nil {
 		return docshelf.User{}, docshelf.NewErrRemoved("user no longer exists in dynamo")
-	}
-
-	return user, nil
-}
-
-func (s Store) getUserByEmail(ctx context.Context, email string) (docshelf.User, error) {
-	var user docshelf.User
-	key, err := makeKey("email", email)
-	if err != nil {
-		return user, err
-	}
-
-	// TODO (erik): Figure out if this actually works with the GSI.
-	input := dynamodb.GetItemInput{
-		TableName: aws.String(s.userTable),
-		Key:       key,
-	}
-
-	res, err := s.client.GetItemRequest(&input).Send()
-	if err != nil {
-		return user, err
-	}
-
-	if err := dyna.UnmarshalMap(res.Item, &user); err != nil {
-		return user, err
 	}
 
 	return user, nil
