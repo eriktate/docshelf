@@ -14,6 +14,7 @@ var (
 	userEmailBucket = []byte("userEmail")
 	groupBucket     = []byte("group")
 	docBucket       = []byte("doc")
+	docIDBucket     = []byte("docID")
 	policyBucket    = []byte("policy")
 	tagBucket       = []byte("tag")
 )
@@ -114,6 +115,10 @@ func initBuckets(tx *bolt.Tx) error {
 	}
 
 	if _, err := tx.CreateBucketIfNotExists(docBucket); err != nil {
+		return err
+	}
+
+	if _, err := tx.CreateBucketIfNotExists(docIDBucket); err != nil {
 		return err
 	}
 
