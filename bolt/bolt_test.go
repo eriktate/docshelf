@@ -264,7 +264,7 @@ func Test_PutGetRemoveDoc(t *testing.T) {
 	}
 
 	// RUN
-	if err := store.PutDoc(ctx, doc); err != nil {
+	if _, err := store.PutDoc(ctx, doc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -316,11 +316,11 @@ func Test_ListDocs(t *testing.T) {
 	}
 
 	// RUN
-	if err := store.PutDoc(ctx, doc1); err != nil {
+	if _, err := store.PutDoc(ctx, doc1); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := store.PutDoc(ctx, doc2); err != nil {
+	if _, err := store.PutDoc(ctx, doc2); err != nil {
 		t.Fatal(err)
 	}
 
@@ -363,11 +363,11 @@ func Test_TagLifecycle(t *testing.T) {
 	}
 
 	// RUN
-	if err := store.PutDoc(ctx, doc1); err != nil {
+	if _, err := store.PutDoc(ctx, doc1); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := store.PutDoc(ctx, doc2); err != nil {
+	if _, err := store.PutDoc(ctx, doc2); err != nil {
 		t.Fatal(err)
 	}
 

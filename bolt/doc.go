@@ -161,14 +161,14 @@ func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) (
 }
 
 // PutDoc creates or updates an existing docshelf Doc in bolt. It will also store the Content in an underlying FileStore.
-func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
+func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) (string, error) {
 	if doc.Path == "" {
-		return errors.New("can not create a new doc without a path")
+		return "", errors.New("can not create a new doc without a path")
 	}
 
 	if existing, err := s.GetDoc(ctx, doc.Path); err == nil {
 		if !docshelf.CheckDoesNotExist(err) {
-			return errors.Wrap(err, "could not verify existing file")
+			return "", errors.Wrap(err, "could not verify existing file")
 		}
 
 		doc.CreatedAt = time.Now()
@@ -183,12 +183,12 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 
 	// save content
 	if err := s.fs.WriteFile(doc.Path, []byte(doc.Content)); err != nil {
-		return errors.Wrap(err, "failed to write doc to file store")
+		return "", errors.Wrap(err, "failed to write doc to file store")
 	}
 
 	// full text index
 	if err := s.ti.Index(ctx, doc); err != nil {
-		return errors.Wrap(err, "failed to text index doc")
+		return "", errors.Wrap(err, "failed to text index doc")
 	}
 
 	doc.Content = "" // need to clear content before storing doc
@@ -207,17 +207,26 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 		return nil
 	}); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc fails
-			return errors.Wrap(err, "failed to put cleanup file after bolt failure")
+			return "", errors.Wrap(err, "failed to put cleanup file after bolt failure")
 		}
 
-		return err
+		return "", err
 	}
 
-	return nil
+	return doc.ID, nil
 }
 
 // TagDoc tags an existing document with the given tags.
 func (s Store) TagDoc(ctx context.Context, path string, tags ...string) error {
+	if _, err := xid.FromString(path); err == nil {
+		doc, err := s.GetDoc(ctx, path)
+		if err != nil {
+			return err
+		}
+
+		path = doc.Path
+	}
+
 	if err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(tagBucket)
 		for _, t := range tags {
