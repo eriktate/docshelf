@@ -23,12 +23,20 @@ type Tag struct {
 func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	var doc docshelf.Doc
 
-	keyName := "path"
-	if _, err := xid.FromString(path); err == nil {
-		keyName = "id"
+	if _, err := xid.FromString(path); err != nil {
+		var docs []docshelf.Doc
+		if err := s.getItemsGsi(ctx, s.docTable, s.docIDIndex, "id", path, &docs); err != nil {
+			return doc, err
+		}
+
+		if len(docs) == 0 {
+			return doc, docshelf.NewErrNotFound("")
+		}
+
+		path = docs[0].Path
 	}
 
-	if err := s.getItem(ctx, s.docTable, keyName, path, &doc); err != nil {
+	if err := s.getItem(ctx, s.docTable, "path", path, &doc); err != nil {
 		return doc, err
 	}
 
@@ -149,7 +157,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) (string, error) {
 	}
 
 	if existing, err := s.GetDoc(ctx, doc.Path); err == nil {
-		if !docshelf.CheckDoesNotExist(err) {
+		if !docshelf.CheckNotFound(err) {
 			return "", errors.Wrap(err, "could not verify existing file")
 		}
 

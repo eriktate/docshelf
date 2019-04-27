@@ -1,8 +1,8 @@
 package docshelf
 
-// ErrDoesNotExist is a special error type for signaling that a requested entity
+// ErrNotFound is a special error type for signaling that a requested entity
 // doesn't exist.
-type ErrDoesNotExist struct {
+type ErrNotFound struct {
 	msg string
 }
 
@@ -12,10 +12,10 @@ type ErrRemoved struct {
 	msg string
 }
 
-// NewErrDoesNotExist returns a new ErrDoesNotExist as a normal error containing
+// NewErrNotFound returns a new ErrNotFound as a normal error containing
 // the given message.
-func NewErrDoesNotExist(msg string) error {
-	return ErrDoesNotExist{msg}
+func NewErrNotFound(msg string) error {
+	return ErrNotFound{msg}
 }
 
 // NewErrRemoved returns a new ErrRemoved as a normal error containing the given
@@ -24,9 +24,9 @@ func NewErrRemoved(msg string) error {
 	return ErrRemoved{msg}
 }
 
-// Error implements the Error interface for ErrDoesNotExist. Default messaging is
+// Error implements the Error interface for ErrNotFound. Default messaging is
 // used if not supplied.
-func (e ErrDoesNotExist) Error() string {
+func (e ErrNotFound) Error() string {
 	if e.msg == "" {
 		return "entity does not exist"
 	}
@@ -44,10 +44,10 @@ func (e ErrRemoved) Error() string {
 	return e.msg
 }
 
-// CheckDoesNotExist is a helper function for determining if an error type is
-// actually an ErrDoesNotExist.
-func CheckDoesNotExist(err error) bool {
-	_, ok := err.(ErrDoesNotExist)
+// CheckNotFound is a helper function for determining if an error type is
+// actually an ErrNotFound.
+func CheckNotFound(err error) bool {
+	_, ok := err.(ErrNotFound)
 	return ok
 }
 

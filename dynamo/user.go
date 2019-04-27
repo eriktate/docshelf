@@ -17,12 +17,20 @@ import (
 func (s Store) GetUser(ctx context.Context, id string) (docshelf.User, error) {
 	var user docshelf.User
 
-	keyName := "id"
 	if isEmail(id) {
-		keyName = "email"
+		var users []docshelf.User
+		if err := s.getItemsGsi(ctx, s.userTable, s.userEmailIndex, "email", id, &users); err != nil {
+			return user, err
+		}
+
+		if len(users) == 0 {
+			return user, docshelf.NewErrNotFound("")
+		}
+
+		id = users[0].ID
 	}
 
-	if err := s.getItem(ctx, s.userTable, keyName, id, &user); err != nil {
+	if err := s.getItem(ctx, s.userTable, "id", id, &user); err != nil {
 		return user, err
 	}
 
