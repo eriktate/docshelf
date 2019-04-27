@@ -13,17 +13,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dyna "github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbiface"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/expression"
 	"github.com/docshelf/docshelf"
 	"github.com/docshelf/docshelf/env"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	defUserTable   = "ds_user"
-	defDocTable    = "ds_doc"
-	defTagTable    = "ds_tag"
-	defGroupTable  = "ds_group"
-	defPolicyTable = "ds_policy"
+	defUserTable   = "docshelf_user"
+	defDocTable    = "docshelf_doc"
+	defTagTable    = "docshelf_tag"
+	defGroupTable  = "docshelf_group"
+	defPolicyTable = "docshelf_policy"
 )
 
 // A Store has methods that know how to interact with docshelf data in Dynamo.
@@ -38,6 +39,9 @@ type Store struct {
 	tagTable    string
 	groupTable  string
 	policyTable string
+
+	userEmailIndex string
+	docIDIndex     string
 }
 
 // New creates a new Store struct.
@@ -67,6 +71,10 @@ func New(fs docshelf.FileStore, ti docshelf.TextIndex, logger *logrus.Logger) (S
 		policyTable: env.GetEnvString("DS_DYNAMO_POLICY_TABLE", defPolicyTable),
 	}
 
+	// set secondary indices
+	store.userEmailIndex = fmt.Sprintf("%s_email_idx", store.userTable)
+	store.docIDIndex = fmt.Sprintf("%s_id_idx", store.docTable)
+
 	return store, store.ensureTables()
 }
 
@@ -92,10 +100,43 @@ func (s Store) getItem(ctx context.Context, table, keyName, key string, out inte
 
 	res, err := s.client.GetItemRequest(&input).Send()
 	if err != nil {
-		return err
+		if strings.Contains(err.Error(), dynamodb.ErrCodeResourceNotFoundException) {
+			return docshelf.NewErrNotFound(err.Error())
+		}
 	}
 
 	if err := dyna.UnmarshalMap(res.Item, out); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s Store) getItemsGsi(ctx context.Context, table, idx, keyName, key string, out interface{}) error {
+	keyCond := expression.Key(keyName).Equal(expression.Value(key))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return err
+	}
+
+	input := dynamodb.QueryInput{
+		TableName:                 aws.String(table),
+		IndexName:                 aws.String(idx),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+	}
+
+	res, err := s.client.QueryRequest(&input).Send()
+	if err != nil {
+		if strings.Contains(err.Error(), dynamodb.ErrCodeResourceNotFoundException) {
+			return docshelf.NewErrNotFound(err.Error())
+		}
+
+		return err
+	}
+
+	if err := dyna.UnmarshalListOfMaps(res.Items, out); err != nil {
 		return err
 	}
 
@@ -192,9 +233,12 @@ func userTableInput(userTable string) dynamodb.CreateTableInput {
 	}
 
 	gsi := dynamodb.GlobalSecondaryIndex{
-		IndexName:  aws.String(fmt.Sprintf("%s_email_idx", userTable)),
-		KeySchema:  []dynamodb.KeySchemaElement{gsiKey},
-		Projection: &dynamodb.Projection{ProjectionType: dynamodb.ProjectionTypeKeysOnly},
+		IndexName: aws.String(fmt.Sprintf("%s_email_idx", userTable)),
+		KeySchema: []dynamodb.KeySchemaElement{gsiKey},
+		Projection: &dynamodb.Projection{
+			ProjectionType:   dynamodb.ProjectionTypeInclude,
+			NonKeyAttributes: []string{"token"},
+		},
 	}
 
 	hashKey := dynamodb.KeySchemaElement{
@@ -235,6 +279,7 @@ func docTableInput(docTable string) dynamodb.CreateTableInput {
 
 	attrDef := []dynamodb.AttributeDefinition{
 		makeAttrDef("path", dynamodb.ScalarAttributeTypeS),
+		makeAttrDef("id", dynamodb.ScalarAttributeTypeS),
 	}
 
 	return dynamodb.CreateTableInput{

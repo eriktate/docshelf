@@ -23,7 +23,7 @@ func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	}
 
 	if err := s.fetchItem(ctx, docBucket, path, &doc); err != nil {
-		if docshelf.CheckDoesNotExist(err) {
+		if docshelf.CheckNotFound(err) {
 			return doc, err
 		}
 
@@ -167,7 +167,7 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) (string, error) {
 	}
 
 	if existing, err := s.GetDoc(ctx, doc.Path); err == nil {
-		if !docshelf.CheckDoesNotExist(err) {
+		if !docshelf.CheckNotFound(err) {
 			return "", errors.Wrap(err, "could not verify existing file")
 		}
 

@@ -51,7 +51,7 @@ func (s Store) getItem(ctx context.Context, tx *bolt.Tx, bucket []byte, id strin
 	b := tx.Bucket(bucket)
 	val := b.Get([]byte(id))
 	if val == nil {
-		return docshelf.NewErrDoesNotExist("")
+		return docshelf.NewErrNotFound("")
 	}
 
 	if err := json.Unmarshal(val, out); err != nil {
@@ -66,7 +66,7 @@ func (s Store) fetchItem(ctx context.Context, bucket []byte, id string, out inte
 		b := tx.Bucket(bucket)
 		val := b.Get([]byte(id))
 		if val == nil {
-			return docshelf.NewErrDoesNotExist("")
+			return docshelf.NewErrNotFound("")
 		}
 
 		if err := json.Unmarshal(val, out); err != nil {

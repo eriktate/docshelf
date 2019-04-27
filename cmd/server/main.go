@@ -93,7 +93,7 @@ func ensureRoot(us docshelf.UserStore, log *logrus.Logger) error {
 	}
 
 	if _, err := us.GetUser(context.Background(), "root@docshelf.io"); err != nil {
-		if docshelf.CheckDoesNotExist(err) {
+		if docshelf.CheckNotFound(err) {
 			if _, err := us.PutUser(context.Background(), root); err != nil {
 				return err
 			}

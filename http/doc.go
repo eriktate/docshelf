@@ -143,7 +143,7 @@ func (h DocHandler) GetDoc(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	doc, err := h.docStore.GetDoc(r.Context(), id)
 	if err != nil {
-		if docshelf.CheckDoesNotExist(err) {
+		if docshelf.CheckNotFound(err) {
 			notFound(w)
 			return
 		}
