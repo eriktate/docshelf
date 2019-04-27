@@ -9,6 +9,7 @@ import (
 	dyna "github.com/aws/aws-sdk-go-v2/service/dynamodb/dynamodbattribute"
 	"github.com/docshelf/docshelf"
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
 )
 
 // A Tag represents the dynamo data structure of a tag.
@@ -21,6 +22,19 @@ type Tag struct {
 // form an underlying FileStore.
 func (s Store) GetDoc(ctx context.Context, path string) (docshelf.Doc, error) {
 	var doc docshelf.Doc
+
+	if _, err := xid.FromString(path); err != nil {
+		var docs []docshelf.Doc
+		if err := s.getItemsGsi(ctx, s.docTable, s.docIDIndex, "id", path, &docs); err != nil {
+			return doc, err
+		}
+
+		if len(docs) == 0 {
+			return doc, docshelf.NewErrNotFound("")
+		}
+
+		path = docs[0].Path
+	}
 
 	if err := s.getItem(ctx, s.docTable, "path", path, &doc); err != nil {
 		return doc, err
@@ -137,16 +151,19 @@ func (s Store) listTaggedDocs(ctx context.Context, tags []string) ([]docshelf.Do
 
 // PutDoc creates or updates an existing docshelf Doc in dynamodb. It will also store the
 // Content in an underlying FileStore.
-func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
+func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) (string, error) {
+	// having no path is an invalid state
 	if doc.Path == "" {
-		return errors.New("can not create a new doc without a path")
+		return "", errors.New("doc must have a valid path")
 	}
 
-	if existing, err := s.GetDoc(ctx, doc.Path); err == nil {
-		if !docshelf.CheckDoesNotExist(err) {
-			return errors.Wrap(err, "could not verify existing file")
+	if existing, err := s.GetDoc(ctx, doc.Path); err != nil {
+		if !docshelf.CheckNotFound(err) {
+			return "", errors.Wrap(err, "could not verify existing file")
 		}
 
+		// set one-time fields for new document
+		doc.ID = xid.New().String()
 		doc.CreatedAt = time.Now()
 	} else {
 		// need to enforce integrity of created* fields if the doc exists.
@@ -158,19 +175,19 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 
 	// save content
 	if err := s.fs.WriteFile(doc.Path, []byte(doc.Content)); err != nil {
-		return errors.Wrap(err, "failed to write doc to file store")
+		return "", errors.Wrap(err, "failed to write doc to file store")
 	}
 
 	// full text index
 	if err := s.ti.Index(ctx, doc); err != nil {
-		return errors.Wrap(err, "failed to text index doc")
+		return "", errors.Wrap(err, "failed to text index doc")
 	}
 
 	doc.Content = "" // need to clear content before storing doc
 
 	marshaled, err := dyna.MarshalMap(&doc)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal doc for dynamo")
+		return "", errors.Wrap(err, "failed to marshal doc for dynamo")
 	}
 
 	input := dynamodb.PutItemInput{
@@ -181,19 +198,28 @@ func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) error {
 	// save metadata
 	if _, err := s.client.PutItemRequest(&input).Send(); err != nil {
 		if err := s.fs.RemoveFile(doc.Path); err != nil { // need to rollback file storage if doc failes
-			return errors.Wrapf(err, "cleanup failed for file: %s", doc.Path)
+			return "", errors.Wrapf(err, "cleanup failed for file: %s", doc.Path)
 		}
 
-		return errors.Wrap(err, "failed to put doc into dynamo")
+		return "", errors.Wrap(err, "failed to put doc into dynamo")
 	}
 
-	return nil
+	return doc.ID, nil
 }
 
 // TagDoc tags an existing document with the given tags.
 // TODO (erik): This is a mirror of the bolt implementation. Need to research and find out
 // if there's a more efficient way to get this behavior out of dynamo.
 func (s Store) TagDoc(ctx context.Context, path string, tags ...string) error {
+	if _, err := xid.FromString(path); err == nil {
+		doc, err := s.GetDoc(ctx, path)
+		if err != nil {
+			return err
+		}
+
+		path = doc.Path
+	}
+
 	for _, t := range tags {
 		var tag Tag
 		if err := s.getItem(ctx, s.tagTable, "tag", t, &tag); err != nil {

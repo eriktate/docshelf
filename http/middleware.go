@@ -21,6 +21,7 @@ func Authentication(userStore docshelf.UserStore) func(http.Handler) http.Handle
 
 			user, err := userStore.GetUser(r.Context(), session.Value)
 			if err != nil {
+				unauthorized(w, "invalid user")
 				return
 			}
 

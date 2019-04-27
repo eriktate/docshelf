@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"strconv"
 
@@ -12,7 +13,9 @@ import (
 	"github.com/docshelf/docshelf/http"
 	"github.com/docshelf/docshelf/s3"
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var log *logrus.Logger
@@ -62,6 +65,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// make sure there's a root user
+	if err := ensureRoot(backend, log); err != nil {
+		log.Fatal(err)
+	}
+
 	server.UserStore = backend
 	server.DocHandler = http.NewDocHandler(backend, log)
 	server.Auth = http.NewBasicAuth(backend)
@@ -69,6 +77,35 @@ func main() {
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func ensureRoot(us docshelf.UserStore, log *logrus.Logger) error {
+	token := xid.New().String()
+	// TODO (erik): Adjust the cost parameter once we can benchmark the time spent hashing the password.
+	hashed, err := bcrypt.GenerateFromPassword([]byte(token), 12)
+	if err != nil {
+		return err
+	}
+
+	root := docshelf.User{
+		Email: "root@docshelf.io",
+		Token: string(hashed),
+	}
+
+	if _, err := us.GetUser(context.Background(), "root@docshelf.io"); err != nil {
+		if docshelf.CheckNotFound(err) {
+			if _, err := us.PutUser(context.Background(), root); err != nil {
+				return err
+			}
+
+			log.WithField("email", root.Email).WithField("password", token).Info("root user created. Keep these credentials secret!")
+			return nil
+		}
+
+		return errors.Wrap(err, "failed to identify root user")
+	}
+
+	return nil
 }
 
 func getFileStore(cfg Config) (docshelf.FileStore, error) {
