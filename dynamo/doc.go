@@ -152,18 +152,20 @@ func (s Store) listTaggedDocs(ctx context.Context, tags []string) ([]docshelf.Do
 // PutDoc creates or updates an existing docshelf Doc in dynamodb. It will also store the
 // Content in an underlying FileStore.
 func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) (string, error) {
+	// having no path is an invalid state
 	if doc.Path == "" {
-		return "", errors.New("can not create a new doc without a path")
+		return "", errors.New("doc must have a valid path")
 	}
 
-	if existing, err := s.GetDoc(ctx, doc.Path); err == nil {
+	if existing, err := s.GetDoc(ctx, doc.Path); err != nil {
 		if !docshelf.CheckNotFound(err) {
 			return "", errors.Wrap(err, "could not verify existing file")
 		}
 
+		// set one-time fields for new document
+		doc.ID = xid.New().String()
 		doc.CreatedAt = time.Now()
 	} else {
-		doc.ID = xid.New().String()
 		// need to enforce integrity of created* fields if the doc exists.
 		doc.CreatedBy = existing.CreatedBy
 		doc.CreatedAt = existing.CreatedAt

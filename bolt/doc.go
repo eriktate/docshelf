@@ -162,18 +162,21 @@ func (s Store) listTaggedDocs(ctx context.Context, tx *bolt.Tx, tags []string) (
 
 // PutDoc creates or updates an existing docshelf Doc in bolt. It will also store the Content in an underlying FileStore.
 func (s Store) PutDoc(ctx context.Context, doc docshelf.Doc) (string, error) {
+	// having no path is an invalid state
 	if doc.Path == "" {
 		return "", errors.New("can not create a new doc without a path")
 	}
 
-	if existing, err := s.GetDoc(ctx, doc.Path); err == nil {
+	// TODO (erik): Should this be fetching by ID? Seems like some weird stuff could happen just pulling by path.
+	if existing, err := s.GetDoc(ctx, doc.Path); err != nil {
 		if !docshelf.CheckNotFound(err) {
 			return "", errors.Wrap(err, "could not verify existing file")
 		}
 
+		// set one-time fields for new document
+		doc.ID = xid.New().String()
 		doc.CreatedAt = time.Now()
 	} else {
-		doc.ID = xid.New().String()
 		// need to enforce integrity of created* fields if the doc exists.
 		doc.CreatedBy = existing.CreatedBy
 		doc.CreatedAt = existing.CreatedAt
