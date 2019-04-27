@@ -95,12 +95,11 @@ func (s Server) buildRoutes() chi.Router {
 		r.Route("/doc", func(r chi.Router) {
 			r.Post("/", s.DocHandler.PostDoc)
 			r.Get("/list", s.DocHandler.GetList)
-			r.Post("/pin/{path}", s.DocHandler.PinDoc) // TODO (erik): This should actually be reversed. Need to add IDs to documents.
-			r.Get("/{path}", s.DocHandler.GetDoc)
-			r.Delete("/{path}", s.DocHandler.DeleteDoc)
+			r.Post("/{id}/pin", s.DocHandler.PinDoc)
+			r.Post("/{id}/tag", s.DocHandler.PostTag)
+			r.Get("/{id}", s.DocHandler.GetDoc)
+			r.Delete("/{id}", s.DocHandler.DeleteDoc)
 		})
-
-		r.Post("/tag", s.DocHandler.PostTag)
 	})
 
 	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
