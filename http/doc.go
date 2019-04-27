@@ -56,19 +56,27 @@ func (h DocHandler) PostDoc(w http.ResponseWriter, r *http.Request) {
 	doc.CreatedBy = user.ID
 	doc.UpdatedBy = user.ID
 
-	if err := h.docStore.PutDoc(r.Context(), doc); err != nil {
+	id, err := h.docStore.PutDoc(r.Context(), doc)
+	if err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while saving document")
 		return
 	}
 
-	noContent(w)
+	data, err := json.Marshal(ID{id})
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while returning ID")
+		return
+	}
+
+	okJSON(w, data)
 }
 
 // PinDoc handles requests from users to pin a document. It applies a special tag to the doc
 // which can be used later to find a user's pinned documents.
 func (h DocHandler) PinDoc(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "path")
+	id := chi.URLParam(r, "id")
 
 	user, err := getContextUser(r.Context())
 	if err != nil {
@@ -77,7 +85,7 @@ func (h DocHandler) PinDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.docStore.TagDoc(r.Context(), path, fmt.Sprintf("user/%s", user.ID)); err != nil {
+	if err := h.docStore.TagDoc(r.Context(), id, fmt.Sprintf("user/%s", user.ID)); err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while pinning document")
 		return
@@ -113,14 +121,15 @@ func (h DocHandler) GetList(w http.ResponseWriter, r *http.Request) {
 
 // PostTag handles requests for posting tags to an existing Doc.
 func (h DocHandler) PostTag(w http.ResponseWriter, r *http.Request) {
-	var req TagReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	id := chi.URLParam(r, "id")
+	var tags []string
+	if err := json.NewDecoder(r.Body).Decode(&tags); err != nil {
 		h.log.Error(err)
 		badRequest(w, "invalid format for tagging documents")
 		return
 	}
 
-	if err := h.docStore.TagDoc(r.Context(), req.Path, req.Tags...); err != nil {
+	if err := h.docStore.TagDoc(r.Context(), id, tags...); err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while tagging document")
 		return
@@ -131,8 +140,8 @@ func (h DocHandler) PostTag(w http.ResponseWriter, r *http.Request) {
 
 // GetDoc handles requests for fetching specific Docs.
 func (h DocHandler) GetDoc(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "path")
-	doc, err := h.docStore.GetDoc(r.Context(), path)
+	id := chi.URLParam(r, "id")
+	doc, err := h.docStore.GetDoc(r.Context(), id)
 	if err != nil {
 		if docshelf.CheckDoesNotExist(err) {
 			notFound(w)
@@ -156,8 +165,8 @@ func (h DocHandler) GetDoc(w http.ResponseWriter, r *http.Request) {
 
 // DeleteDoc handles requests for removing specific Docs.
 func (h DocHandler) DeleteDoc(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "path")
-	if err := h.docStore.RemoveDoc(r.Context(), path); err != nil {
+	id := chi.URLParam(r, "id")
+	if err := h.docStore.RemoveDoc(r.Context(), id); err != nil {
 		h.log.Error(err)
 		serverError(w, "something went wrong while deleting document")
 		return

@@ -56,7 +56,7 @@ type Policy struct {
 type DocStore interface {
 	GetDoc(ctx context.Context, path string) (Doc, error)
 	ListDocs(ctx context.Context, query string, tags ...string) ([]Doc, error)
-	PutDoc(ctx context.Context, doc Doc) error
+	PutDoc(ctx context.Context, doc Doc) (string, error)
 	TagDoc(ctx context.Context, path string, tags ...string) error
 	RemoveDoc(ctx context.Context, path string) error
 }
