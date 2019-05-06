@@ -28,19 +28,19 @@ type Group struct {
 }
 
 // A Doc is a full docshelf document. This includes metadata as well as content.
-type Doc struct {
-	ID        string    `json:"id"`
-	Path      string    `json:"path"`
-	Title     string    `json:"title"`
-	IsDir     bool      `json:"isDir"`
-	Content   string    `json:"content,omitempty"`
-	Policy    *Policy   `json:"policy"`
-	Tags      []string  `json:"tags"`
-	CreatedBy string    `json:"createdBy"`
-	UpdatedBy string    `json:"updatedBy"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-}
+// type Doc struct {
+// 	ID        string    `json:"id"`
+// 	Path      string    `json:"path"`
+// 	Title     string    `json:"title"`
+// 	IsDir     bool      `json:"isDir"`
+// 	Content   string    `json:"content,omitempty"`
+// 	Policy    *Policy   `json:"policy"`
+// 	Tags      []string  `json:"tags"`
+// 	CreatedBy string    `json:"createdBy"`
+// 	UpdatedBy string    `json:"updatedBy"`
+// 	CreatedAt time.Time `json:"createdAt"`
+// 	UpdatedAt time.Time `json:"updatedAt"`
+// }
 
 // An Policy defines the users and groups that have access to a particular file path.
 type Policy struct {
