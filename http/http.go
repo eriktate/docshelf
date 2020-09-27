@@ -86,7 +86,8 @@ func (s Server) buildRoutes() chi.Router {
 	mux.Route("/api", func(r chi.Router) {
 		r.Use(Authentication(s.UserStore))
 		r.Route("/user", func(r chi.Router) {
-			r.Get("/", userHandler.GetUsers)
+			r.Get("/", userHandler.GetCurrentUser)
+			r.Get("/list", userHandler.GetUsers)
 			r.Post("/", userHandler.PostUser)
 			r.Get("/{id}", userHandler.GetUser)
 			r.Delete("/{id}", userHandler.DeleteUser)

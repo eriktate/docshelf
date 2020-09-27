@@ -1,5 +1,7 @@
 module github.com/docshelf/docshelf
 
+go 1.14
+
 require (
 	github.com/RoaringBitmap/roaring v0.4.17 // indirect
 	github.com/Smerity/govarint v0.0.0-20150407073650-7265e41f48f1 // indirect

@@ -29,6 +29,25 @@ func NewUserHandler(userStore docshelf.UserStore, logger *logrus.Logger) UserHan
 	}
 }
 
+// GetCurrentUser handles requests for fetching the currently logged in user.
+func (h UserHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	user, err := getContextUser(r.Context())
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while fetching the current user")
+		return
+	}
+
+	data, err := json.Marshal(user)
+	if err != nil {
+		h.log.Error(err)
+		serverError(w, "something went wrong while serializing user")
+		return
+	}
+
+	okJSON(w, data)
+}
+
 // GetUsers handles requests for listing all Users.
 func (h UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.userStore.ListUsers(r.Context())
