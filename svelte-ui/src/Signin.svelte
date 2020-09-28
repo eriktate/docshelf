@@ -17,6 +17,8 @@
 	}
 </script>
 
+
+<div class="g-signin2" data-onsuccess="onSignIn"></div>
 <form on:submit|preventDefault={handleSubmit}>
 	<div>
 		<input type="text" placeholder="Username" bind:value={username} />
