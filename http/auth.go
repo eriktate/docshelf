@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	jwt "github.com/dgrijalva/jwt-go"
 
@@ -16,32 +17,40 @@ import (
 )
 
 const googleKeyEndpoint = "https://www.googleapis.com/oauth2/v1/certs"
+const googleIssuer = "accounts.google.com"
 
-// BasicAuth provides a simple implementation of the Authenticator interface. It does
+type Claims struct {
+	jwt.StandardClaims
+
+	Email string `json:"email"`
+}
+
+// Auth provides a simple implementation of the Authenticator interface. It does
 // a simple lookup of the user and confirms whether or not the credentials match
 // what's stored.
-type BasicAuth struct {
+type Auth struct {
 	userStore docshelf.UserStore
 }
 
-// NewBasicAuth returns a new instance of BasicAuth configured with the given
+// NewAuth returns a new instance of Auth configured with the given
 // docshelf.UserStore.
-func NewBasicAuth(userStore docshelf.UserStore) BasicAuth {
-	return BasicAuth{userStore}
+func NewAuth(userStore docshelf.UserStore) Auth {
+	return Auth{userStore}
 }
 
 // Authenticate implements the docshelf.Authenticator interface. It does a simple pull
 // of the user from a UserStore and compares the attempted token with the stored hashed
 // token.
-func (b BasicAuth) Authenticate(ctx context.Context, email, token string) error {
+func (a Auth) Authenticate(ctx context.Context, email, token string) error {
 	// if no email, assume oauth attempt
 	if email == "" {
-		if err := b.Validate(ctx, token); err != nil {
+		if err := a.Validate(ctx, token); err != nil {
 			return err
 		}
 	}
 
-	user, err := b.userStore.GetUser(ctx, email)
+	// if email and token combination are provided, attempt basic auth
+	user, err := a.userStore.GetUser(ctx, email)
 	if err != nil {
 		return errors.Wrap(err, "could not find user to authenticate")
 	}
@@ -64,6 +73,7 @@ func getGooglePublicKeys() (map[string]string, error) {
 		return nil, errors.New("failed to fetch keys")
 	}
 
+	log.Printf("%v", res.Header.Get("Cache-Control"))
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
@@ -78,8 +88,8 @@ func getGooglePublicKeys() (map[string]string, error) {
 	return keys, nil
 }
 
-func (b BasicAuth) Validate(ctx context.Context, token string) error {
-	tok, err := jwt.Parse(token, func(tok *jwt.Token) (interface{}, error) {
+func (b Auth) Validate(ctx context.Context, token string) error {
+	tok, err := jwt.ParseWithClaims(token, &Claims{}, func(tok *jwt.Token) (interface{}, error) {
 		if _, ok := tok.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", tok.Header["alg"])
 		}
@@ -98,10 +108,28 @@ func (b BasicAuth) Validate(ctx context.Context, token string) error {
 		return publicKey, nil
 	})
 
-	log.Printf("Token: %+v", tok)
 	if err != nil {
 		return fmt.Errorf("failed to parse jwt: %s", err)
 	}
 
+	claims := tok.Claims.(*Claims)
+	clientID := os.Getenv("DS_GOOGLE_CLIENT_ID")
+
+	// validates expiry information
+	if err := claims.Valid(); err != nil {
+		return fmt.Errorf("invalid token: %w", err)
+	}
+
+	// validates the token was signed with our client ID
+	if !claims.VerifyAudience(clientID, true) {
+		return errors.New("clientID in token did not match server")
+	}
+
+	// validates the token issuer matches expectations
+	if !claims.VerifyIssuer(googleIssuer, true) {
+		return errors.New("invalid issuer")
+	}
+
+	log.Printf("Token email: %s", claims.Email)
 	return nil
 }
