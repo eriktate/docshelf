@@ -71,7 +71,7 @@ func (s Server) CheckHandlers() error {
 }
 
 func (s Server) buildRoutes() chi.Router {
-	mux := chi.NewRouter()
+	router := chi.NewRouter()
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -82,8 +82,8 @@ func (s Server) buildRoutes() chi.Router {
 	})
 
 	userHandler := NewUserHandler(s.UserStore, s.log)
-	mux.Use(cors.Handler)
-	mux.Route("/api", func(r chi.Router) {
+	router.Use(cors.Handler)
+	router.Route("/api", func(r chi.Router) {
 		r.Use(Authentication(s.UserStore))
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/", userHandler.GetCurrentUser)
@@ -103,12 +103,12 @@ func (s Server) buildRoutes() chi.Router {
 		})
 	})
 
-	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
-	mux.Post("/login", s.handleLogin)
+	router.Get("/doc/{path}", s.DocHandler.RenderDoc)
+	router.Post("/login", s.handleLogin)
 
-	mux.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
+	router.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
 
-	return mux
+	return router
 }
 
 func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -127,8 +127,7 @@ func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO (erik): Need to sign this data and add an expiration.
-	// Also may need to expand the data stored.
+	// TODO (erik): This is a hack to make it easy to have "auth" during dev. This is *NOT* secure, by any means :D
 	identity := http.Cookie{
 		Name:     "session",
 		Value:    user.ID,

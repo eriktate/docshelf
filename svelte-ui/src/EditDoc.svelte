@@ -54,7 +54,7 @@
 					</span>
 				{/if}
 			</fieldset>
-			<button class="submit" type="submit">Create Document</button>
+			<button class="submit" type="submit">{buttonText}</button>
 		</div>
 		<div id="editor" />
 	</form>
