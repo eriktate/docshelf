@@ -1,4 +1,5 @@
 <script lang="typescript">
+	import { onMount } from "svelte";
 	import { navigate } from "svelte-routing";
 	import { login } from "./api.ts";
 
@@ -15,10 +16,14 @@
 			console.log("failed to login");
 		}
 	}
+
+	onMount(async () => {
+		window.gapi.signin2.render("g-signin2");
+	});
 </script>
 
 
-<div class="g-signin2" data-onsuccess="onSignIn"></div>
+<div id="g-signin2" class="g-signin2" data-onsuccess="onSignIn"></div>
 <form on:submit|preventDefault={handleSubmit}>
 	<div>
 		<input type="text" placeholder="Username" bind:value={username} />

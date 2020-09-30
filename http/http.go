@@ -120,21 +120,15 @@ func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.Auth.Authenticate(r.Context(), login.Email, login.Token); err != nil {
+	user, err := s.Auth.Authenticate(r.Context(), login.Email, login.Token)
+	if err != nil {
 		s.log.Error(err)
 		unauthorized(w, "invalid credentials")
 		return
 	}
 
-	user, err := s.UserStore.GetUser(r.Context(), login.Email)
-	if err != nil {
-		s.log.Error(err)
-		serverError(w, "something went wrong while verifying credentials")
-		return
-	}
-
 	// TODO (erik): Need to sign this data and add an expiration.
-	// Also may need to expand the data stored and remove the HttpOnly.
+	// Also may need to expand the data stored.
 	identity := http.Cookie{
 		Name:     "session",
 		Value:    user.ID,

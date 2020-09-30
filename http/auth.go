@@ -23,6 +23,7 @@ type Claims struct {
 	jwt.StandardClaims
 
 	Email string `json:"email"`
+	Name  string `json:"name"`
 }
 
 // Auth provides a simple implementation of the Authenticator interface. It does
@@ -41,25 +42,53 @@ func NewAuth(userStore docshelf.UserStore) Auth {
 // Authenticate implements the docshelf.Authenticator interface. It does a simple pull
 // of the user from a UserStore and compares the attempted token with the stored hashed
 // token.
-func (a Auth) Authenticate(ctx context.Context, email, token string) error {
+func (a Auth) Authenticate(ctx context.Context, email, token string) (docshelf.User, error) {
 	// if no email, assume oauth attempt
 	if email == "" {
-		if err := a.Validate(ctx, token); err != nil {
-			return err
+		return a.oauth(ctx, token)
+	}
+
+	return a.basicAuth(ctx, email, token)
+}
+
+func (a Auth) oauth(ctx context.Context, token string) (docshelf.User, error) {
+	claims, err := a.Validate(ctx, token)
+	if err != nil {
+		return docshelf.User{}, err
+	}
+
+	user, err := a.userStore.GetUser(ctx, claims.Email)
+	if err != nil {
+		user = docshelf.User{
+			Email: claims.Email,
+			Name:  claims.Name,
+		}
+
+		id, err := a.userStore.PutUser(ctx, user)
+		if err != nil {
+			return docshelf.User{}, fmt.Errorf("failed to create new oauth user: %w", err)
+		}
+
+		user, err = a.userStore.GetUser(ctx, id)
+		if err != nil {
+			return docshelf.User{}, fmt.Errorf("failed to fetch new oauth user: %w", err)
 		}
 	}
 
-	// if email and token combination are provided, attempt basic auth
+	return user, nil
+}
+
+func (a Auth) basicAuth(ctx context.Context, email, password string) (docshelf.User, error) {
 	user, err := a.userStore.GetUser(ctx, email)
 	if err != nil {
-		return errors.Wrap(err, "could not find user to authenticate")
+		return docshelf.User{}, errors.Wrap(err, "could not find user to authenticate")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Token), []byte(token)); err != nil {
-		return errors.New("authentication failed")
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Token), []byte(password)); err != nil {
+		return docshelf.User{}, errors.New("authentication failed")
 	}
 
-	return nil
+	return user, nil
 }
 
 func getGooglePublicKeys() (map[string]string, error) {
@@ -88,7 +117,7 @@ func getGooglePublicKeys() (map[string]string, error) {
 	return keys, nil
 }
 
-func (b Auth) Validate(ctx context.Context, token string) error {
+func (b Auth) Validate(ctx context.Context, token string) (*Claims, error) {
 	tok, err := jwt.ParseWithClaims(token, &Claims{}, func(tok *jwt.Token) (interface{}, error) {
 		if _, ok := tok.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", tok.Header["alg"])
@@ -109,7 +138,7 @@ func (b Auth) Validate(ctx context.Context, token string) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to parse jwt: %s", err)
+		return nil, fmt.Errorf("failed to parse jwt: %s", err)
 	}
 
 	claims := tok.Claims.(*Claims)
@@ -117,19 +146,18 @@ func (b Auth) Validate(ctx context.Context, token string) error {
 
 	// validates expiry information
 	if err := claims.Valid(); err != nil {
-		return fmt.Errorf("invalid token: %w", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	// validates the token was signed with our client ID
 	if !claims.VerifyAudience(clientID, true) {
-		return errors.New("clientID in token did not match server")
+		return nil, errors.New("clientID in token did not match server")
 	}
 
 	// validates the token issuer matches expectations
 	if !claims.VerifyIssuer(googleIssuer, true) {
-		return errors.New("invalid issuer")
+		return nil, errors.New("invalid issuer")
 	}
 
-	log.Printf("Token email: %s", claims.Email)
-	return nil
+	return claims, nil
 }
