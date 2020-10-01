@@ -10,6 +10,7 @@ build:
   stage: build
   script:
     - go build cmd/server/main.go
+    - parcel build ui/index.html
 
 lint:
   stage: lint

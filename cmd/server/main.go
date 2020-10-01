@@ -47,7 +47,7 @@ func configFromEnv() Config {
 }
 
 func main() {
-	godotenv.Load()
+	_ = godotenv.Load() // we don't care if this errors
 	log = logrus.New()
 	cfg := configFromEnv()
 	server := http.NewServer(cfg.Host, cfg.Port, log)

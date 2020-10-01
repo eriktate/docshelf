@@ -110,7 +110,7 @@ func (h DocHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// don't return 'null' values for empty results
-	if docs == nil || len(docs) == 0 {
+	if len(docs) == 0 {
 		okJSON(w, []byte("[]"))
 		return
 	}

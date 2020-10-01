@@ -19,6 +19,7 @@ import (
 const googleKeyEndpoint = "https://www.googleapis.com/oauth2/v1/certs"
 const googleIssuer = "accounts.google.com"
 
+// Claims represent claimed data embedded in an ouath access token.
 type Claims struct {
 	jwt.StandardClaims
 
@@ -52,7 +53,7 @@ func (a Auth) Authenticate(ctx context.Context, email, token string) (docshelf.U
 }
 
 func (a Auth) oauth(ctx context.Context, token string) (docshelf.User, error) {
-	claims, err := a.Validate(ctx, token)
+	claims, err := validate(ctx, token)
 	if err != nil {
 		return docshelf.User{}, err
 	}
@@ -117,7 +118,7 @@ func getGooglePublicKeys() (map[string]string, error) {
 	return keys, nil
 }
 
-func (b Auth) Validate(ctx context.Context, token string) (*Claims, error) {
+func validate(ctx context.Context, token string) (*Claims, error) {
 	tok, err := jwt.ParseWithClaims(token, &Claims{}, func(tok *jwt.Token) (interface{}, error) {
 		if _, ok := tok.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", tok.Header["alg"])

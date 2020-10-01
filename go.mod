@@ -15,7 +15,7 @@ require (
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/cors v1.0.0
-	github.com/joho/godotenv v1.3.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v1.2.1
 	github.com/russross/blackfriday v2.0.0+incompatible
