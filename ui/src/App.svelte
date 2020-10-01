@@ -5,23 +5,17 @@
 	import TopNav from "./TopNav.svelte";
 	import Signin from "./Signin.svelte";
 	import Profile from "./Profile.svelte";
-	import { listDocs, getCurrentUser} from "./api.ts";
+	import { getCurrentUser} from "./api.ts";
 
 	import type { User, Doc } from "./api.ts"; //= end
 
-	/* const email = "root@docshelf.io"; */
-	/* const password = "btnslev1n0pakb16b80g"; */
-
 	export let url: string = "";
 	let user: User;
-	let docs: Doc[] = [];
-	let selected: string;
 
 	async function init(): void {
 		console.log("running init");
 		try {
 			user = await getCurrentUser();
-			docs = await listDocs();
 		} catch (err) {
 			console.log("failed to fetch user, need to sign in!");
 		}
@@ -31,14 +25,6 @@
 		user = newUser;
 	}
 
-	function selectDoc(id: string): void {
-		console.log("selecting: ", id);
-		selected = id;
-		navigate(`/edit/${id}`);
-	}
-
-	$: currentDoc = docs.find(doc => doc.id === selected);
-
 	init();
 </script>
 
@@ -46,7 +32,7 @@
 	<TopNav {user}/>
 	<main>
 		<Route path="/">
-			<DocList {docs} {selectDoc}/>
+			<DocList />
 		</Route>
 		<Route path="/edit/:id" component={EditDoc} />
 		<Route path="/create" component={EditDoc} />
