@@ -65,13 +65,6 @@
 		min-height: 20rem;
 	}
 
-	.pane {
-		background-color: #ffffff;
-		border-radius: 5px;
-		box-shadow: 1px 5px 5px 0 #777777;
-		box-sizing: border-box;
-	}
-
 	.controls {
 		display: flex;
 		flex-direction: row;
@@ -104,5 +97,4 @@
 		border-width: 1px;
 		border-color: #ccc;
 	}
-
 </style>
