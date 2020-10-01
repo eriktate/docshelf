@@ -4,6 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import sveltePreprocess from 'svelte-preprocess';
+import scss from 'rollup-plugin-scss';
 import typescript from '@rollup/plugin-typescript';
 
 const production = !process.env.ROLLUP_WATCH;
@@ -29,7 +30,7 @@ function serve() {
 	};
 }
 
-export default {
+export default [{
 	input: 'src/main.ts',
 	output: {
 		sourcemap: true,
@@ -46,7 +47,19 @@ export default {
 			css: css => {
 				css.write('bundle.css');
 			},
-			preprocess: sveltePreprocess(),
+      preprocess: sveltePreprocess({
+        sourceMap: !production,
+        defaults: {
+          script: 'typescript',
+          style: 'scss',
+        },
+        scss: {
+          prependData: `@import 'public/variables.scss';`,
+        },
+        postcss: {
+          plugins: [require('autoprefixer')]
+        }
+      }),
 		}),
 
 		// If you have external dependencies installed from
@@ -79,4 +92,11 @@ export default {
 	watch: {
 		clearScreen: false
 	}
-};
+}, {
+  input: 'public/global.scss',
+  plugins: [
+    scss({
+      output: "public/build/global.css",
+    }),
+  ]
+}];
