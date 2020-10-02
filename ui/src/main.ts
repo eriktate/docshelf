@@ -4,6 +4,7 @@ import { login } from "./api";
 declare global {
 	interface Window {
 		onSignIn: (user: any) => Promise<void>;
+    gapi: any;
 	}
 }
 

@@ -1,7 +1,7 @@
 <script lang="typescript">
 	import { onMount } from "svelte";
 	import { navigate } from "svelte-routing";
-	import { login } from "./api.ts";
+	import { login } from "./api";
 
 	export let success: () => void;
 	let username: string = "";
@@ -11,7 +11,7 @@
 		try {
 			await login(username, password);
 			navigate("/", { replace: false });
-			await success();
+			success();
 		} catch (err) {
 			console.log("failed to login");
 		}

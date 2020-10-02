@@ -1,15 +1,19 @@
 <script lang="typescript">
 	import { onMount } from "svelte";
 	import { link } from "svelte-routing";
-	import { listDocs } from "./api.ts";
+	import { listDocs } from "./api";
 
-	import type { Doc } from "./api.ts"; // = end
+	import type { Doc } from "./api"; // = end
 
 	let docs: Doc[] = [];
 
-	function friendlyTimestamp(ts): string {
-		const date = new Date(ts);
-		return date.toDateString();
+	function friendlyTimestamp(ts?: string): string {
+		if (ts) {
+			const date = new Date(ts);
+			return date.toDateString();
+		}
+
+		return "";
 	}
 
 	onMount(async () => {
