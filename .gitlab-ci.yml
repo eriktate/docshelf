@@ -10,15 +10,14 @@ build-api:
   stage: build
   script:
     - go build cmd/server/main.go
-    - parcel build ui/index.html
 
 build-ui:
   stage: build
   image: node:14
   script:
     - cd ui
-    - npm install
-    - npx run parcel build index.html
+    - npm install --save-dev
+    - npm run build
 
 lint-api:
   stage: lint
