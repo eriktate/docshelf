@@ -15,4 +15,5 @@ coverage.html
 node_modules/
 elm-stuff/
 dist/
+build/
 .cache/

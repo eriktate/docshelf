@@ -12,6 +12,7 @@ import (
 	"github.com/docshelf/docshelf/dynamo"
 	"github.com/docshelf/docshelf/http"
 	"github.com/docshelf/docshelf/s3"
+	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
@@ -46,6 +47,7 @@ func configFromEnv() Config {
 }
 
 func main() {
+	_ = godotenv.Load() // we don't care if this errors
 	log = logrus.New()
 	cfg := configFromEnv()
 	server := http.NewServer(cfg.Host, cfg.Port, log)
@@ -72,7 +74,7 @@ func main() {
 
 	server.UserStore = backend
 	server.DocHandler = http.NewDocHandler(backend, log)
-	server.Auth = http.NewBasicAuth(backend)
+	server.Auth = http.NewAuth(backend)
 
 	if err := server.Start(); err != nil {
 		log.Fatal(err)

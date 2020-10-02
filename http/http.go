@@ -71,7 +71,7 @@ func (s Server) CheckHandlers() error {
 }
 
 func (s Server) buildRoutes() chi.Router {
-	mux := chi.NewRouter()
+	router := chi.NewRouter()
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -82,11 +82,12 @@ func (s Server) buildRoutes() chi.Router {
 	})
 
 	userHandler := NewUserHandler(s.UserStore, s.log)
-	mux.Use(cors.Handler)
-	mux.Route("/api", func(r chi.Router) {
+	router.Use(cors.Handler)
+	router.Route("/api", func(r chi.Router) {
 		r.Use(Authentication(s.UserStore))
 		r.Route("/user", func(r chi.Router) {
-			r.Get("/", userHandler.GetUsers)
+			r.Get("/", userHandler.GetCurrentUser)
+			r.Get("/list", userHandler.GetUsers)
 			r.Post("/", userHandler.PostUser)
 			r.Get("/{id}", userHandler.GetUser)
 			r.Delete("/{id}", userHandler.DeleteUser)
@@ -102,12 +103,12 @@ func (s Server) buildRoutes() chi.Router {
 		})
 	})
 
-	mux.Get("/doc/{path}", s.DocHandler.RenderDoc)
-	mux.Post("/login", s.handleLogin)
+	router.Get("/doc/{path}", s.DocHandler.RenderDoc)
+	router.Post("/login", s.handleLogin)
 
-	mux.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
+	router.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
 
-	return mux
+	return router
 }
 
 func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -119,21 +120,14 @@ func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.Auth.Authenticate(r.Context(), login.Email, login.Token); err != nil {
+	user, err := s.Auth.Authenticate(r.Context(), login.Email, login.Token)
+	if err != nil {
 		s.log.Error(err)
 		unauthorized(w, "invalid credentials")
 		return
 	}
 
-	user, err := s.UserStore.GetUser(r.Context(), login.Email)
-	if err != nil {
-		s.log.Error(err)
-		serverError(w, "something went wrong while verifying credentials")
-		return
-	}
-
-	// TODO (erik): Need to sign this data and add an expiration.
-	// Also may need to expand the data stored and remove the HttpOnly.
+	// TODO (erik): This is a hack to make it easy to have "auth" during dev. This is *NOT* secure, by any means :D
 	identity := http.Cookie{
 		Name:     "session",
 		Value:    user.ID,

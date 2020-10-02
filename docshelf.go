@@ -86,7 +86,8 @@ type PolicyStore interface {
 
 // An Authenticator knows how to authenticate user credentials.
 type Authenticator interface {
-	Authenticate(ctx context.Context, email, token string) error
+	Authenticate(ctx context.Context, email, token string) (User, error)
+	// Validate(ctx context.Context, token string) (Claims, error)
 }
 
 // A Backend is an aggregation of almost all docshelf store interfaces.
