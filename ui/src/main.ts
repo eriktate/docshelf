@@ -3,18 +3,7 @@ import { login } from "./api";
 
 declare global {
 	interface Window {
-		onSignIn: (user: any) => Promise<void>;
     gapi: any;
-	}
-}
-
-window.onSignIn = async function(user: any): Promise<void> {
-  console.log("Signing in");
-	const idToken = user.getAuthResponse().id_token;
-	try {
-		await login("", idToken); // login with no email assumes oauth
-	} catch (err) {
-		console.log("failed to sign in with oauth");
 	}
 }
 

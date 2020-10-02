@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
 	import { navigate } from "svelte-routing";
 	import { login } from "./api";
+	import retry from "./retry";
 
 	export let success: () => void;
 	let username: string = "";
@@ -17,22 +18,32 @@
 		}
 	}
 
-	async function onSignIn(user: any): Promise<void> {
+	async function handleGoogleSignin(user: any): Promise<void> {
+	  console.log("Signing in");
 		const idToken = user.getAuthResponse().id_token;
 		try {
-			await login("", idToken);
+			await login("", idToken); // login with no email assumes oauth
+			user.disconnect();
+			navigate("/", { replace: false });
 		} catch (err) {
 			console.log("failed to sign in with oauth");
 		}
 	}
 
+	function handleGoogleFailure(err: any): void {
+		console.log("Failed signin: ", err);
+	}
+
 	onMount(async () => {
-		window.gapi.signin2.render("g-signin2");
+		retry(async () => window.gapi.signin2.render("google-signin", {
+			onsuccess: handleGoogleSignin,
+			onfailure: handleGoogleFailure,
+		}));
 	});
 </script>
 
 
-<div id="g-signin2" class="g-signin2" data-onsuccess="onSignIn"></div>
+<div id="google-signin"></div>
 <form on:submit|preventDefault={handleSubmit}>
 	<div>
 		<input type="text" placeholder="Username" bind:value={username} />
