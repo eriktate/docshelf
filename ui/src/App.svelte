@@ -1,28 +1,23 @@
 <script lang="typescript">
-	import { Router, Route, navigate } from "svelte-routing";
+	import { Router, Route } from "svelte-routing";
 	import EditDoc from "./EditDoc.svelte";
 	import DocList from "./DocList.svelte";
 	import TopNav from "./TopNav.svelte";
 	import Signin from "./Signin.svelte";
 	import Profile from "./Profile.svelte";
-	import { getCurrentUser} from "./api.ts";
+	import { getCurrentUser} from "./api";
 
-	import type { User, Doc } from "./api.ts"; //= end
+	import type { User } from "./api"; //= end
 
 	export let url: string = "";
 	let user: User;
 
-	async function init(): void {
-		console.log("running init");
+	async function init(): Promise<void> {
 		try {
 			user = await getCurrentUser();
 		} catch (err) {
 			console.log("failed to fetch user, need to sign in!");
 		}
-	}
-
-	function setUser(newUser: User): void {
-		user = newUser;
 	}
 
 	init();
