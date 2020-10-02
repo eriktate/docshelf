@@ -109,6 +109,12 @@ func (h DocHandler) GetList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// don't return 'null' values for empty results
+	if len(docs) == 0 {
+		okJSON(w, []byte("[]"))
+		return
+	}
+
 	data, err := json.Marshal(docs)
 	if err != nil {
 		h.log.Error(err)

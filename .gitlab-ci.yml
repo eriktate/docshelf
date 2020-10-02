@@ -6,12 +6,20 @@ stages:
   - test
   - report
 
-build:
+build-api:
   stage: build
   script:
     - go build cmd/server/main.go
 
-lint:
+build-ui:
+  stage: build
+  image: node:14
+  script:
+    - cd ui
+    - npm install --save-dev
+    - npm run build
+
+lint-api:
   stage: lint
   script:
     - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s latest

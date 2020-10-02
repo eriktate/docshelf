@@ -1,0 +1,79 @@
+<script lang="typescript">
+	import type { User } from "./api.ts"; //= end
+	import { link } from "svelte-routing";
+	export let user: User;
+</script>
+
+<nav>
+	<ul>
+		<li class="banner"><a href="/">Docshelf</a></li>
+		<li><a href="/create" use:link>Create New</a></li>
+	</ul>
+
+	<ul class="menu">
+		<li><input type="text" placeholder="Search..." /></li>
+		<li><a href="/" use:link>Dashboard</a></li>
+		{#if !user}
+			<li><a href="/signin" use:link>Sign In</a></li>
+		{:else}
+			<li><a href="/profile" use:link>Profile</a></li>
+		{/if}
+		<li><a href="/about">About</a></li>
+	</ul>
+</nav>
+
+<style>
+	nav {
+		display: flex;
+		background-color: #111111;
+		color: #eeeeee;
+		height: 4rem;
+		font-weight: 700;
+		box-shadow: 1px 5px 5px 0 #777777;
+	}
+
+	ul {
+		display: flex;
+		height: 100%;
+	}
+
+	li {
+		display: flex;
+		align-items: center;
+		height: 100%;
+		line-height: 1rem;
+		margin: auto 0;
+		vertical-align: center;
+	}
+
+	input {
+		margin: 0 1.5rem;
+		background-color: #333;
+		border-color: #333;
+		color: #fff;
+	}
+
+	a {
+		display: flex;
+		padding: 0 1.5rem;
+		align-items: center;
+		height: 100%;
+		color: #EEEEEE;
+	}
+
+	a:hover {
+		background-color: #555555;
+	}
+
+	a:visited {
+
+	}
+
+	.banner {
+		font-weight: 900;
+	}
+
+	.menu {
+		margin-left: auto;
+	}
+</style>

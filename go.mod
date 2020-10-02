@@ -1,5 +1,7 @@
 module github.com/docshelf/docshelf
 
+go 1.14
+
 require (
 	github.com/RoaringBitmap/roaring v0.4.17 // indirect
 	github.com/Smerity/govarint v0.0.0-20150407073650-7265e41f48f1 // indirect
@@ -9,9 +11,11 @@ require (
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
 	github.com/boltdb/bolt v1.3.1
 	github.com/couchbase/vellum v0.0.0-20190328134517-462e86d8716b // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/cors v1.0.0
+	github.com/joho/godotenv v1.3.0
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v1.2.1
 	github.com/russross/blackfriday v2.0.0+incompatible
