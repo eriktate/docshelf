@@ -28,7 +28,7 @@ jobs:
       run: go test -v ./...
 
   lint:
-    name: Build And Test
+    name: Lint
     runs-on: ubuntu-latest
     steps:
     - name: Lint

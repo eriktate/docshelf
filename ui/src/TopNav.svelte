@@ -1,5 +1,5 @@
 <script lang="typescript">
-	import type { User } from "./api.ts"; //= end
+	import type { User } from "./api"; //= end
 	import { link } from "svelte-routing";
 	export let user: User;
 </script>
@@ -63,10 +63,6 @@
 
 	a:hover {
 		background-color: #555555;
-	}
-
-	a:visited {
-
 	}
 
 	.banner {

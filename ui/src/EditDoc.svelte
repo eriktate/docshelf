@@ -1,8 +1,8 @@
 <script lang="typescript">
 	import Quill from "quill";
 	import { onMount } from "svelte";
-	import { createDoc, getDoc } from "./api.ts";
-	import type { Doc } from "./api.ts"; // = end
+	import { createDoc, getDoc } from "./api";
+	import type { Doc } from "./api"; // = end
 
 	export let id = "";
 
@@ -12,17 +12,9 @@
 		content: "",
 	};
 
-	let quill;
+	let quill: Quill;
 
 	$: path = doc.title.toLowerCase().split(" ").join("-");
-
-	async function init(): void {
-		if (id) {
-			doc = await getDoc(id);
-			const content = JSON.parse(doc.content);
-			quill.setContents(content);
-		}
-	}
 
 	async function handleSubmit(): Promise<void> {
 		const content = JSON.stringify(quill.getContents());
@@ -34,7 +26,12 @@
 
 	onMount(async () => {
 		quill = new Quill("#editor", { theme: "snow" });
-		init();
+
+		if (id) {
+			doc = await getDoc(id);
+			const content = JSON.parse(doc.content);
+			quill.setContents(content);
+		}
 	});
 
 	$: headerText = doc.id ? "editing document" : "creating document";

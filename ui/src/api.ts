@@ -3,6 +3,8 @@ export interface Doc {
 	title: string;
 	path: string;
 	content: string;
+  updatedAt?: string;
+  createdAt?: string
 }
 
 export interface User {
