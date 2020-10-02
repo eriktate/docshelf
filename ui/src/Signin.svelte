@@ -17,6 +17,15 @@
 		}
 	}
 
+	async function onSignIn(user: any): Promise<void> {
+		const idToken = user.getAuthResponse().id_token;
+		try {
+			await login("", idToken);
+		} catch (err) {
+			console.log("failed to sign in with oauth");
+		}
+	}
+
 	onMount(async () => {
 		window.gapi.signin2.render("g-signin2");
 	});

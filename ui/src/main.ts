@@ -9,6 +9,7 @@ declare global {
 }
 
 window.onSignIn = async function(user: any): Promise<void> {
+  console.log("Signing in");
 	const idToken = user.getAuthResponse().id_token;
 	try {
 		await login("", idToken); // login with no email assumes oauth

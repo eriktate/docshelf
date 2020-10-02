@@ -6,7 +6,7 @@
 
 <nav>
 	<ul>
-		<li class="banner"><a href="/">Docshelf</a></li>
+		<li class="banner"><a href="/" use:link>Docshelf</a></li>
 		<li><a href="/create" use:link>Create New</a></li>
 	</ul>
 
