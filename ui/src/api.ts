@@ -13,7 +13,7 @@ export interface User {
 	name: string;
 }
 
-const basePath: string = "http://localhost:9000"
+const basePath: string = "http://localhost:9001"
 export async function login(email: string, password: string): Promise<void> {
 	try {
 		await fetch(`${basePath}/login`, {

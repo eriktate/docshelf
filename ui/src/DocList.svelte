@@ -24,6 +24,9 @@
 <div class="pane">
 	<h3>Your Documents</h3>
 	<ul>
+		{#if docs.length == 0}
+			<div>You don't have any!</div>
+		{/if}
 		{#each docs as doc}
 			<li>
 				<a href={`/edit/${doc.id}`} use:link>

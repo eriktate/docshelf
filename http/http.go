@@ -175,7 +175,7 @@ func (s Server) handleOauth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &identity)
-	redirect(w, "http://localhost:9000")
+	redirect(w, "http://localhost:9001")
 }
 
 // everything down here is setup for attaching certain data to the request context.

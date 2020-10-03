@@ -33,7 +33,7 @@
 	}
 
 	async function handleGithubSignin(): Promise<void> {
-		window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&scope=user:email&redirect_uri=http://localhost:9000/oauth/github`
+		window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&scope=user:email&redirect_uri=http://localhost:9001/oauth/github`
 	}
 
 	onMount(async () => {
