@@ -18,6 +18,9 @@ func NewBasic(userStore docshelf.UserStore) Basic {
 	return Basic{userStore}
 }
 
+// Authenticate implements the docshelf.Authenticator interface. It looks the user up by email
+// and hashes their given password using bcrypt. If the hash matches what was returned from the
+// userStore, the login is successful.
 func (b Basic) Authenticate(ctx context.Context, email, token string) (docshelf.User, error) {
 	user, err := b.userStore.GetUser(ctx, email)
 	if err != nil {
