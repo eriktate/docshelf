@@ -111,6 +111,10 @@ func (g Google) validate(ctx context.Context, token string) (*Claims, error) {
 	return claims, nil
 }
 
+// Authenticate implements the docshelf.Authenticator interface. The email is ignored and the token is
+// expected to be a google auth ID token. The token is validated using google's public keys and the
+// email and name are extracted from the verified JWT claims. If the ID token is valid, then auth is
+// successful.
 func (g Google) Authenticate(ctx context.Context, email, token string) (docshelf.User, error) {
 	claims, err := g.validate(ctx, token)
 	if err != nil {
