@@ -15,24 +15,30 @@ import (
 
 // A Server is a collection of stores that get wired up to HTTP endpoint.
 type Server struct {
-	host string
-	port uint
-	log  *logrus.Logger
+	host           string
+	port           uint
+	log            *logrus.Logger
+	authenticators map[string]docshelf.Authenticator
 
 	DocHandler  DocHandler
 	UserStore   docshelf.UserStore
 	GroupStore  docshelf.GroupStore
 	PolicyStore docshelf.PolicyStore
-	Auth        docshelf.Authenticator
 }
 
 // NewServer returns a new Server struct.
 func NewServer(host string, port uint, logger *logrus.Logger) Server {
 	return Server{
-		host: host,
-		port: port,
-		log:  logger,
+		host:           host,
+		port:           port,
+		log:            logger,
+		authenticators: make(map[string]docshelf.Authenticator),
 	}
+}
+
+// AddAuth method to server.
+func (s Server) AddAuth(name string, auth docshelf.Authenticator) {
+	s.authenticators[name] = auth
 }
 
 // Start fires up an HTTP server and listens for incoming requests.
@@ -63,7 +69,7 @@ func (s Server) CheckHandlers() error {
 		return errors.New("no PolicyStore set")
 	}
 
-	if s.Auth == nil {
+	if len(s.authenticators) == 0 {
 		return errors.New("no Authenticator set")
 	}
 
@@ -105,22 +111,33 @@ func (s Server) buildRoutes() chi.Router {
 
 	router.Get("/doc/{path}", s.DocHandler.RenderDoc)
 	router.Post("/login", s.handleLogin)
+	router.Get("/oauth/{provider}", s.handleOauth)
 
-	router.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
+	// router.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
+	router.Handle("/*", http.HandlerFunc(s.handleDefault))
 
 	return router
 }
 
+func (s Server) handleDefault(w http.ResponseWriter, r *http.Request) {
+	s.log.WithField("url", r.URL.String()).Info("handling unkown request")
+}
+
 func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var login docshelf.User
-
+	s.log.Info("handling login")
 	if err := json.NewDecoder(r.Body).Decode(&login); err != nil {
 		s.log.Error(err)
 		badRequest(w, "invalid authentication data")
 		return
 	}
 
-	user, err := s.Auth.Authenticate(r.Context(), login.Email, login.Token)
+	provider := "basic"
+	if login.Email == "" {
+		provider = "google"
+	}
+
+	user, err := s.authenticators[provider].Authenticate(r.Context(), login.Email, login.Token)
 	if err != nil {
 		s.log.Error(err)
 		unauthorized(w, "invalid credentials")
@@ -131,11 +148,34 @@ func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	identity := http.Cookie{
 		Name:     "session",
 		Value:    user.ID,
+		Path:     "/",
 		HttpOnly: true,
 	}
 
 	http.SetCookie(w, &identity)
 	noContent(w)
+}
+
+func (s Server) handleOauth(w http.ResponseWriter, r *http.Request) {
+	provider := chi.URLParam(r, "provider")
+	code := r.URL.Query().Get("code")
+	s.log.WithField("provider", provider).Info("handling oauth")
+	user, err := s.authenticators[provider].Authenticate(r.Context(), "", code)
+	if err != nil {
+		s.log.WithError(err).WithField("provider", provider).Error("failed to authenticate with provider")
+		serverError(w, "authentication failed")
+		return
+	}
+
+	identity := http.Cookie{
+		Name:     "session",
+		Value:    user.ID,
+		Path:     "/",
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, &identity)
+	redirect(w, "http://localhost:9000")
 }
 
 // everything down here is setup for attaching certain data to the request context.

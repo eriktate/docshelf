@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/docshelf/docshelf"
+	"github.com/docshelf/docshelf/auth"
 	"github.com/docshelf/docshelf/bleve"
 	"github.com/docshelf/docshelf/bolt"
 	"github.com/docshelf/docshelf/disk"
@@ -31,18 +32,30 @@ type Config struct {
 	BoltPath    string
 	Host        string
 	Port        uint
+
+	// Github auth
+	GithubClientID string
+	GithubSecret   string
+
+	// Google auth
+	GoogleClientID string
+	GoogleSecret   string
 }
 
 func configFromEnv() Config {
 	return Config{
-		Backend:     getEnvString("DS_BACKEND", "bolt"),
-		FileBackend: getEnvString("DS_FILE_BACKEND", "disk"),
-		TextIndex:   getEnvString("DS_TEXT_INDEX", "bleve"),
-		S3Bucket:    getEnvString("DS_S3_BUCKET", ""),
-		FilePrefix:  getEnvString("DS_FILE_PREFIX", "documents"),
-		BoltPath:    getEnvString("DS_BOLTDB_PATH", "docshelf.db"),
-		Host:        getEnvString("DS_HOST", "localhost"),
-		Port:        getEnvUint("DS_PORT", 1337),
+		Backend:        getEnvString("DS_BACKEND", "bolt"),
+		FileBackend:    getEnvString("DS_FILE_BACKEND", "disk"),
+		TextIndex:      getEnvString("DS_TEXT_INDEX", "bleve"),
+		S3Bucket:       getEnvString("DS_S3_BUCKET", ""),
+		FilePrefix:     getEnvString("DS_FILE_PREFIX", "documents"),
+		BoltPath:       getEnvString("DS_BOLTDB_PATH", "docshelf.db"),
+		Host:           getEnvString("DS_HOST", "localhost"),
+		Port:           getEnvUint("DS_PORT", 1337),
+		GithubClientID: getEnvString("DS_GITHUB_CLIENT_ID", ""),
+		GithubSecret:   getEnvString("DS_GITHUB_CLIENT_SECRET", ""),
+		GoogleClientID: getEnvString("DS_GOOGLE_CLIENT_ID", ""),
+		GoogleSecret:   getEnvString("DS_GOOGLE_CLIENT_SECRET", ""),
 	}
 }
 
@@ -74,7 +87,9 @@ func main() {
 
 	server.UserStore = backend
 	server.DocHandler = http.NewDocHandler(backend, log)
-	server.Auth = http.NewAuth(backend)
+	server.AddAuth("basic", auth.NewBasic(backend))
+	server.AddAuth("github", auth.NewGithub(backend, cfg.GithubClientID, cfg.GithubSecret))
+	server.AddAuth("google", auth.NewGoogle(backend, cfg.GoogleClientID, cfg.GoogleSecret))
 
 	if err := server.Start(); err != nil {
 		log.Fatal(err)

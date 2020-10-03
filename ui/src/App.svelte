@@ -1,5 +1,6 @@
 <script lang="typescript">
-	import { Router, Route } from "svelte-routing";
+	import { onMount } from "svelte";
+	import { Router, Route, navigate } from "svelte-routing";
 	import EditDoc from "./EditDoc.svelte";
 	import DocList from "./DocList.svelte";
 	import TopNav from "./TopNav.svelte";
@@ -12,15 +13,21 @@
 	export let url: string = "";
 	let user: User;
 
-	async function init(): Promise<void> {
+	async function checkUser(): Promise<void> {
+		// if we have the user info, don't do anything
+		if (user) return;
+
 		try {
 			user = await getCurrentUser();
 		} catch (err) {
 			console.log("failed to fetch user, need to sign in!");
+			if (window.location.pathname != "/signin")  {
+				navigate("/signin");
+			}
 		}
 	}
 
-	init();
+	onMount(checkUser);
 </script>
 
 <Router url={url}>
@@ -32,7 +39,7 @@
 		<Route path="/edit/:id" component={EditDoc} />
 		<Route path="/create" component={EditDoc} />
 		<Route path="/signin">
-			<Signin success={init}/>
+			<Signin success={checkUser}/>
 		</Route>
 		<Route path="/profile">
 			<Profile {user} />

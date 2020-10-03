@@ -17,3 +17,4 @@ elm-stuff/
 dist/
 build/
 .cache/
+.env

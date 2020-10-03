@@ -6,7 +6,7 @@
 
 <nav>
 	<ul>
-		<li class="banner"><a href="/">Docshelf</a></li>
+		<li class="banner"><a href="/" use:link>Docshelf</a></li>
 		<li><a href="/create" use:link>Create New</a></li>
 	</ul>
 
@@ -47,7 +47,6 @@
 	}
 
 	input {
-		margin: 0 1.5rem;
 		background-color: #333;
 		border-color: #333;
 		color: #fff;

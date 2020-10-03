@@ -1,0 +1,9 @@
+{
+	http_port 9000
+}
+localhost:9000
+
+reverse_proxy /login localhost:1337
+reverse_proxy /api/* localhost:1337
+reverse_proxy /oauth/* localhost:1337
+reverse_proxy /* localhost:5000
