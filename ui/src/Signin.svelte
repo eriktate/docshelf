@@ -2,9 +2,8 @@
 	import { onMount } from "svelte";
 	import { navigate } from "svelte-routing";
 	import { login } from "./api";
-	import retry from "./retry";
 
-	export let success: async () => Promise<void>;
+	export let success: () => Promise<void>;
 	let username: string = "";
 	let password: string = "";
 
@@ -33,12 +32,8 @@
 		}
 	}
 
-	function handleGoogleFailure(err: any): void {
-		console.log("Failed signin: ", err);
-	}
-
 	async function handleGithubSignin(): Promise<void> {
-		window.location = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&scope=user:email&redirect_uri=http://localhost:9000/oauth/github`
+		window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&scope=user:email&redirect_uri=http://localhost:9000/oauth/github`
 	}
 
 	onMount(async () => {
@@ -74,7 +69,7 @@
 	</form>
 </div>
 
-<style>
+<style lang="scss">
 	.pane {
 		margin: auto;
 		width: 50%;
