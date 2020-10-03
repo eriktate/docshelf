@@ -47,7 +47,6 @@
 	}
 
 	input {
-		margin: 0 1.5rem;
 		background-color: #333;
 		border-color: #333;
 		color: #fff;

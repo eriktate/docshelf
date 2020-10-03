@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -24,6 +25,16 @@ func okHTML(w http.ResponseWriter, data []byte) {
 
 func noContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
+	if _, err := w.Write(nil); err != nil {
+		log.WithError(err).Error()
+	}
+}
+
+// NOTE: This isn't a typical 3xx redirect. It's a 200 with the refresh header
+// set.
+func redirect(w http.ResponseWriter, url string) {
+	w.Header().Add("Refresh", fmt.Sprintf("0;url=%s", url))
+	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(nil); err != nil {
 		log.WithError(err).Error()
 	}
