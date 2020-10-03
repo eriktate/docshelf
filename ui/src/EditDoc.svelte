@@ -58,40 +58,40 @@
 </div>
 
 <style>
-	#editor {
-		min-height: 20rem;
-	}
+#editor {
+	min-height: 20rem;
+}
 
-	.controls {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-	}
+.controls {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
 
-	.submit {
-		background-color: #111111;
-		color: #eeeeee;
-		border-radius: 3px;
-		border: none;
-		padding: 1rem;
-	}
+.submit {
+	background-color: #111111;
+	color: #eeeeee;
+	border-radius: 3px;
+	border: none;
+	padding: 1rem;
+}
 
-	form {
-		display: flex;
-		flex-direction: column;
-		background-color: #ffffff;
-		padding: 2rem;
-		border-radius: 5px;
-		box-sizing: border-box;
-	}
+form {
+	display: flex;
+	flex-direction: column;
+	background-color: #ffffff;
+	padding: 2rem;
+	border-radius: 5px;
+	box-sizing: border-box;
+}
 
-	h3 {
-		display: block;
-		padding: 1rem;
-		width: 100%;
-		padding-bottom: 1rem;
-		border-bottom: solid;
-		border-width: 1px;
-		border-color: #ccc;
-	}
+h3 {
+	display: block;
+	padding: 1rem;
+	width: 100%;
+	padding-bottom: 1rem;
+	border-bottom: solid;
+	border-width: 1px;
+	border-color: #ccc;
+}
 </style>

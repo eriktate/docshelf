@@ -1,5 +1,5 @@
 <script lang="typescript">
-	import { beforeUpdate } from "svelte";
+	import { onMount } from "svelte";
 	import { Router, Route, navigate } from "svelte-routing";
 	import EditDoc from "./EditDoc.svelte";
 	import DocList from "./DocList.svelte";
@@ -21,14 +21,13 @@
 			user = await getCurrentUser();
 		} catch (err) {
 			console.log("failed to fetch user, need to sign in!");
-			console.log(window.location.pathname);
 			if (window.location.pathname != "/signin")  {
 				navigate("/signin");
 			}
 		}
 	}
 
-	beforeUpdate(checkUser);
+	onMount(checkUser);
 </script>
 
 <Router url={url}>

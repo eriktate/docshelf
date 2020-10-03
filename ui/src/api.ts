@@ -13,9 +13,10 @@ export interface User {
 	name: string;
 }
 
+const basePath: string = "http://localhost:9000"
 export async function login(email: string, password: string): Promise<void> {
 	try {
-		await fetch("http://localhost:1337/login", {
+		await fetch(`${basePath}/login`, {
 			method: "POST",
 			credentials: "include",
 			body: JSON.stringify({email, token: password}),
@@ -27,7 +28,7 @@ export async function login(email: string, password: string): Promise<void> {
 }
 
 export async function getCurrentUser(): Promise<User> {
-		const res = await fetch("http://localhost:1337/api/user", {
+		const res = await fetch(`${basePath}/api/user`, {
 			credentials: "include",
 		});
 
@@ -36,7 +37,7 @@ export async function getCurrentUser(): Promise<User> {
 }
 
 export async function createDoc(doc: Doc): Promise<string> {
-	const res = await fetch("http://localhost:1337/api/doc", {
+	const res = await fetch(`${basePath}/api/doc`, {
 			method: "POST",
 			credentials: "include",
 			body: JSON.stringify(doc),
@@ -49,7 +50,7 @@ export async function createDoc(doc: Doc): Promise<string> {
 
 export async function listDocs(): Promise<Doc[]> {
 	try {
-		const res = await fetch("http://localhost:1337/api/doc/list", {
+		const res = await fetch(`${basePath}/api/doc/list`, {
 			credentials: "include",
 		});
 		const docs = await res.json();
@@ -62,7 +63,7 @@ export async function listDocs(): Promise<Doc[]> {
 
 export async function getDoc(id: string): Promise<Doc> {
 	try {
-		const res = await fetch(`http://localhost:1337/api/doc/${id}`, {
+		const res = await fetch(`${basePath}/api/doc/${id}`, {
 			credentials: "include",
 		});
 		const doc = await res.json();
