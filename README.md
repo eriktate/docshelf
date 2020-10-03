@@ -33,14 +33,14 @@ $ npm run dev
 ```
 
 #### Caddy reverse proxy
-In order to serve both the UI and the API under the same domain (`localhost:9000` is the default), you can proxy through caddy. Download the binary release for your system from [the caddy download page](https://caddyserver.com/download).
+In order to serve both the UI and the API under the same domain (`localhost:9001` is the default), you can proxy through caddy. Download the binary release for your system from [the caddy download page](https://caddyserver.com/download).
 
 From the root of the project:
 ```
 $ caddy start
 ```
 
-Once caddy, the UI dev server, and API are all running, you should be able to navigate to https://localhost:9000/ to load docshelf.
+Once caddy, the UI dev server, and API are all running, you should be able to navigate to https://localhost:9001/ to load docshelf.
 
 ## Backends
 ### AWS

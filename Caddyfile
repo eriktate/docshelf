@@ -1,7 +1,7 @@
 {
-	http_port 9000
+	http_port 9001
 }
-localhost:9000
+localhost:9001
 
 reverse_proxy /login localhost:1337
 reverse_proxy /api/* localhost:1337
