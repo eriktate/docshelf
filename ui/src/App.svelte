@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
 	import { onMount } from "svelte";
 	import { Router, Route, navigate } from "svelte-routing";
 	import EditDoc from "./EditDoc.svelte";

@@ -4,6 +4,7 @@
 localhost:9001
 
 reverse_proxy /login localhost:1337
+reverse_proxy /logout localhost:1337
 reverse_proxy /api/* localhost:1337
 reverse_proxy /oauth/* localhost:1337
 reverse_proxy /* localhost:5000

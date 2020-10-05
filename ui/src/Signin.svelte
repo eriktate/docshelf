@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
 	import { onMount } from "svelte";
 	import { navigate } from "svelte-routing";
 	import { login } from "./api";
@@ -69,11 +69,12 @@
 	</form>
 </div>
 
-<style lang="scss">
+<style>
 	.pane {
 		margin: auto;
 		width: 50%;
 	}
+
 	.submit {
 		background-color: #111111;
 		color: #eeeeee;
