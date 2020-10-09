@@ -19,7 +19,7 @@ function serve() {
 	return {
 		writeBundle() {
 			if (server) return;
-			server = require('child_process').spawn('npm', ['run', 'start', '--', '--dev', '--single'], {
+			server = require('child_process').spawn('npm', ['run', 'start', '--', '--dev', '--single', '--host'], {
 				stdio: ['ignore', 'inherit', 'inherit'],
 				shell: true
 			});
@@ -96,7 +96,9 @@ export default [{
   input: 'public/global.scss',
   plugins: [
     scss({
-      output: "public/build/global.css",
+      output: {
+        dir: "public/build/",
+      },
     }),
   ]
 }];

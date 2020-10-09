@@ -1,10 +1,10 @@
 {
 	http_port 9001
 }
-localhost:9001
+{$CADDY_ADDRESS}:9001
 
-reverse_proxy /login localhost:1337
-reverse_proxy /logout localhost:1337
-reverse_proxy /api/* localhost:1337
-reverse_proxy /oauth/* localhost:1337
-reverse_proxy /* localhost:5000
+reverse_proxy /login {$API_ADDRESS}
+reverse_proxy /logout {$API_ADDRESS}
+reverse_proxy /api/* {$API_ADDRESS}
+reverse_proxy /oauth/* {$API_ADDRESS}
+reverse_proxy /* {$UI_ADDRESS}

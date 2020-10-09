@@ -102,12 +102,7 @@ func (d Delta) RenderMarkdown() (string, error) {
 		// need to be careful with trailing spaces because markdown doesn't
 		// like them when rendering special formatting
 		lineBuf.WriteString(resolveAttrsMD(currentAttrs, op.Attrs))
-		if trailingWS(op.Insert) {
-			lineBuf.WriteString(strings.TrimRight(op.Insert, " "))
-			lineBuf.WriteRune(' ')
-		} else {
-			lineBuf.WriteString(op.Insert)
-		}
+		lineBuf.WriteString(op.Insert)
 		currentAttrs = op.Attrs
 
 		if strings.HasSuffix(op.Insert, "\n") {
