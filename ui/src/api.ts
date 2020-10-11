@@ -27,6 +27,14 @@ export async function login(email: string, password: string): Promise<void> {
 	}
 }
 
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${basePath}/logout`, { credentials: "include" });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 export async function getCurrentUser(): Promise<User> {
 		const res = await fetch(`${basePath}/api/user`, {
 			credentials: "include",

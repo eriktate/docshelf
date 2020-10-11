@@ -1,6 +1,8 @@
-<script lang="typescript">
+<script lang="ts">
 	import type { User } from "./api"; //= end
 	import { link } from "svelte-routing";
+	import { logout } from "./api";
+
 	export let user: User;
 </script>
 
@@ -19,6 +21,9 @@
 			<li><a href="/profile" use:link>Profile</a></li>
 		{/if}
 		<li><a href="/about">About</a></li>
+		{#if user}
+			<li><a href="/" on:click={logout}>Log Out</a></li>
+		{/if}
 	</ul>
 </nav>
 

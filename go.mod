@@ -13,6 +13,7 @@ require (
 	github.com/couchbase/vellum v0.0.0-20190328134517-462e86d8716b // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/cors v1.0.0
 	github.com/joho/godotenv v1.3.0
@@ -24,5 +25,4 @@ require (
 	github.com/sirupsen/logrus v1.3.0
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
-	golang.org/x/sys v0.0.0-20190302025703-b6889370fb10 // indirect
 )

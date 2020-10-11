@@ -8,14 +8,15 @@ A lightweight, team documentation solution that won't make you pull your hair ou
 This project is still a pre-alpha work in progress and isn't suitable for any real use cases yet. Come back soon though! :smile:
 
 ## Quickstart
-The fastest way to get up and running with docshelf is to build and run the docker container.
+The fastest way to get up and running with docshelf is to spin everything up with docker compose.
 ```
-$ docker build -t docshelf .
-$ docker run -it -p 1337:1337 docshelf
+$ docker compose up
 ```
-Navigating to [http://localhost:1337/](http://localhost:1337/) should pop up a login window.
+Navigating to [http://localhost:9001/](http://localhost:9001/) should pop up a login window.
 
-## Getting Started
+Running with `docker-compose` runs the UI as a dev server, so bundles should be updated as you make changes  (although you will have to manually refresh your browser). The API also has rudimentary "hot reloading". Any time you modify a go file, a new build will be generated and the running binary will be replaced.
+
+## Local Development
 ### API
 To get the docshelf API running natively on your local machine, you just need to have the go compiler installed.
 ```

@@ -1,0 +1,36 @@
+version: "3.3"
+services:
+  docshelf-api:
+    image: docshelf-api
+    build:
+      context: ./
+      dockerfile: docker/local/api/Dockerfile
+    volumes:
+      - ./:/opt/docshelf
+    environment:
+      - DS_HOST=0.0.0.0
+
+  docshelf-ui:
+    image: docshelf-ui
+    build:
+      context: ./
+      dockerfile: docker/local/ui/Dockerfile
+    volumes:
+      - ./ui/src:/opt/ui/src
+      - ./ui/public:/opt/ui/public
+    command: ["run", "dev"]
+
+  docshelf-proxy:
+    image: docshelf-proxy
+    depends_on:
+      - docshelf-api
+      - docshelf-ui
+    build:
+      context: ./
+      dockerfile: docker/local/caddy/Dockerfile
+    ports:
+      - "9001:9001"
+    environment:
+      - CADDY_ADDRESS=localhost
+      - "API_ADDRESS=docshelf-api:1337"
+      - "UI_ADDRESS=docshelf-ui:5000"

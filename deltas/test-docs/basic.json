@@ -1,0 +1,38 @@
+	{
+		"ops": [
+			{
+				"insert": "Hello there ",
+				"attributes": {
+					"bold": true
+				}
+			},
+			{
+				"insert": "you beautiful people! ",
+				"attributes": {
+					"bold": true,
+					"italic": true
+				}
+			},
+			{
+				"insert": "Sorry, I'll stop shouting...\n"
+			},
+			{
+				"insert": "Bullet item 1"
+			},
+			{
+				"insert": "\n",
+				"attributes": {
+					"list": "bullet"
+				}
+			},
+			{
+				"insert": "Bullet item 2"
+			},
+			{
+				"insert": "\n",
+				"attributes": {
+					"list": "bullet"
+				}
+			}
+		]
+	}

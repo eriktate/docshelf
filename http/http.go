@@ -111,6 +111,7 @@ func (s Server) buildRoutes() chi.Router {
 
 	router.Get("/doc/{path}", s.DocHandler.RenderDoc)
 	router.Post("/login", s.handleLogin)
+	router.Get("/logout", handleLogout)
 	router.Get("/oauth/{provider}", s.handleOauth)
 
 	// router.Handle("/*", http.FileServer(http.Dir("./ui/dist/")))
@@ -154,6 +155,21 @@ func (s Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &identity)
 	noContent(w)
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+
+	// TODO (erik): This is a hack to make it easy to have "auth" during dev. This is *NOT* secure, by any means :D
+	identity := http.Cookie{
+		Name:     "session",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, &identity)
+	// need to force a refresh so the app figures the user is invalid
+	redirect(w, "http://localhost:9001")
 }
 
 func (s Server) handleOauth(w http.ResponseWriter, r *http.Request) {
