@@ -84,9 +84,9 @@ func resolveAttrsMD(existing, target Attributes) string {
 	return mod
 }
 
-func trailingWS(input string) bool {
-	return input[len(input)-1] == ' '
-}
+// func trailingWS(input string) bool {
+// 	return input[len(input)-1] == ' '
+// }
 
 // func trailingNL(input string) bool {
 // 	return input[len(input)-1] == '\n'

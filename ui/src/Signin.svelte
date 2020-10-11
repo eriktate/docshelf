@@ -69,7 +69,7 @@
 	</form>
 </div>
 
-<style>
+<style type="scss">
 	.pane {
 		margin: auto;
 		width: 50%;

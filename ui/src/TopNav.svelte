@@ -22,7 +22,7 @@
 		{/if}
 		<li><a href="/about">About</a></li>
 		{#if user}
-			<li><a href="" on:click={logout}>Log Out</a></li>
+			<li><a href="/" on:click={logout}>Log Out</a></li>
 		{/if}
 	</ul>
 </nav>
